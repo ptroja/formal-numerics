@@ -5,7 +5,8 @@ package Formal.Numerics is
 
    pragma Annotate (GNATprove, External_Axiomatization);
 
-   -- FIXME: external axiomatization of Pi and e constants is not supported.
+   -- FIXME: external axiomatization of Pi and e as constants is not supported;
+   -- instead, we define them as inlined functions.
 
 --     Pi : constant := Ada.Numerics.Pi;
 --     e : constant := Ada.Numerics.e;
@@ -16,7 +17,7 @@ package Formal.Numerics is
    function e return Float is (Ada.Numerics.e);
    pragma inline(e);
 
-   -- FIXME: rewrite with static invariants (not yet supported by GNATprove).
+   -- FIXME: rewrite bounds as static invariants (which are not yet supported by GNATprove).
 
    -- Formal representation of (0.0 ; +Inf) interval.
    subtype Positive_Float is Float range 0.0 .. Float'Last;
