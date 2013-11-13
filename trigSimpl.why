@@ -1,4 +1,4 @@
-theory SimpleTrigonometry
+theory Trigonometry
 
   use import real.Real
   use import real.Square
