@@ -201,7 +201,7 @@ module Formal__numerics__elementary_functions__arctan
  function arctan (y : real) (x : real) : Standard__float.float
 
  val arctan (y : real) (x : real) : Standard__float.float
-  requires { y <> 0.0  \/ x <> 0.0 }
+  requires { y <> 0.0 \/ x <> 0.0 }
   ensures  {
       if x >.  0.0 then result = Standard__float.of_real (Trigonometry.atan (y/.x)) else
       if y >=. 0.0 /\ x <. 0.0 then result = Standard__float.of_real (Trigonometry.atan (y/.x) +. Trigonometry.pi) else
