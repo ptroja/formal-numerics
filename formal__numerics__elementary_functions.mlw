@@ -84,7 +84,7 @@ module Formal__numerics__elementary_functions__sin
  use        "_gnatprove_standard".Floating
  use import "real".RealInfix
  use        "_gnatprove_standard".Boolean
- use        "real".Trigonometry
+ use        "trigSimpl".Trigonometry
 
  function sin (x : real) : Standard__float.float
 
@@ -102,7 +102,7 @@ module Formal__numerics__elementary_functions__cos
  use        "_gnatprove_standard".Floating
  use import "real".RealInfix
  use        "_gnatprove_standard".Boolean
- use        "real".Trigonometry
+ use        "trigSimpl".Trigonometry
 
  function cos (x : real) : Standard__float.float
 
@@ -120,7 +120,7 @@ module Formal__numerics__elementary_functions__tan
  use        "_gnatprove_standard".Floating
  use import "real".RealInfix
  use        "_gnatprove_standard".Boolean
- use        "real".Trigonometry
+ use        "trigSimpl".Trigonometry
 
  function tan (x : real) : Standard__float.float
 
@@ -138,7 +138,7 @@ module Formal__numerics__elementary_functions__cot
  use        "_gnatprove_standard".Floating
  use import "real".RealInfix
  use        "_gnatprove_standard".Boolean
- use        "real".Trigonometry
+ use        "trigSimpl".Trigonometry
 
  function cot (x : real) : Standard__float.float
 
@@ -156,7 +156,7 @@ module Formal__numerics__elementary_functions__arcsin
  use        "_gnatprove_standard".Floating
  use import "real".RealInfix
  use        "_gnatprove_standard".Boolean
- use        "real".Trigonometry
+ use        "trigSimpl".Trigonometry
  use        "real".Abs
 
  function arcsin (x : real) : Standard__float.float
@@ -175,7 +175,7 @@ module Formal__numerics__elementary_functions__arccos
  use        "_gnatprove_standard".Floating
  use import "real".RealInfix
  use        "_gnatprove_standard".Boolean
- use        "real".Trigonometry
+ use        "trigSimpl".Trigonometry
  use        "real".Abs
 
  function arccos (x : real) : Standard__float.float
@@ -194,7 +194,7 @@ module Formal__numerics__elementary_functions__arctan
  use        "_gnatprove_standard".Floating
  use import "real".RealInfix
  use        "_gnatprove_standard".Boolean
- use        "real".Trigonometry
+ use        "trigSimpl".Trigonometry
  use        "real".Abs
 
  (* http://en.wikipedia.org/wiki/Atan2#Definition_and_computation *)
@@ -221,7 +221,7 @@ module Formal__numerics__elementary_functions__arccot
  use        "_gnatprove_standard".Floating
  use import "real".RealInfix
  use        "_gnatprove_standard".Boolean
- use        "real".Trigonometry
+ use        "trigSimpl".Trigonometry
  use        "real".Abs
 
  function arccot (y : real) (x : real) : Standard__float.float

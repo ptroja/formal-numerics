@@ -44,8 +44,7 @@ package Formal.Numerics.Elementary_Functions is
                and then (if X = 0.0 then Sqrt'Result = 0.0)
                and then (if X = 1.0 then Sqrt'Result = 1.0);
 
-   function Log (X : Float) return Float
-   with
+   function Log (X : Float) return Float with
      Pre => X > 0.0,
      Post => (if X = 1.0 then Log'Result = 0.0);
 

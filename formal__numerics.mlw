@@ -199,15 +199,16 @@ module Formal__numerics__pi
           but it seems eqivalent to float.
 
  use        "_standard__types_in_spec".Standard__universal_real
- *)
  use        Standard__universal_real
+ *)
+ use import Standard__float
  use        "_gnatprove_standard".Floating
- use        "real".Trigonometry
+ use        "trigSimpl".Trigonometry
 
- function pi (__void_param : unit) : Standard__universal_real.universal_real
+ function pi (__void_param : unit) : Standard__float.float
 
- val pi (__void_param : unit) : Standard__universal_real.universal_real
-  ensures { result = Standard__universal_real.of_real (Trigonometry.pi) }
+ val pi (__void_param : unit) : Standard__float.float
+  ensures { result = Standard__float.of_real (Trigonometry.pi) }
 
 end
 
@@ -221,15 +222,16 @@ module Formal__numerics__e
           but it seems eqivalent to float.
 
  use        "_standard__types_in_spec".Standard__universal_real
- *)
  use        Standard__universal_real
+ *)
+ use import Standard__float
  use        "_gnatprove_standard".Floating
  use        "real".ExpLog
 
- function e (__void_param : unit) : Standard__universal_real.universal_real
+ function e (__void_param : unit) : Standard__float.float
 
- val e (__void_param : unit) : Standard__universal_real.universal_real
-  ensures { result = Standard__universal_real.of_real (ExpLog.e) }
+ val e (__void_param : unit) : Standard__float.float
+  ensures { result = Standard__float.of_real (ExpLog.e) }
 
 end
 
