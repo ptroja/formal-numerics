@@ -7,4 +7,3 @@ library project Formal_Numerics is
    for Library_Dir use "lib";
 
 end Formal_Numerics;
-
