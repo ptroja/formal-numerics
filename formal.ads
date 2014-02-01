@@ -1,3 +1,3 @@
-package formal is
+package Formal is
    Pragma Pure;
 end;
