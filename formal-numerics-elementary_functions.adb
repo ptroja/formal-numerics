@@ -27,20 +27,20 @@ package body Formal.Numerics.Elementary_Functions is
       return Float
    renames Ada.Numerics.Elementary_Functions."**";
 
-   function Sin
-     (X : Float)
-      return Float
-   renames Ada.Numerics.Elementary_Functions.Sin;
+--     function Sin
+--       (X : Float)
+--        return Float
+--     renames Ada.Numerics.Elementary_Functions.Sin;
 
    function Sin
      (X, Cycle : Float)
       return Float
    renames Ada.Numerics.Elementary_Functions.Sin;
 
-   function Cos
-     (X : Float)
-      return Float
-   renames Ada.Numerics.Elementary_Functions.Cos;
+--     function Cos
+--       (X : Float)
+--        return Float
+--     renames Ada.Numerics.Elementary_Functions.Cos;
 
    function Cos
      (X, Cycle : Float)

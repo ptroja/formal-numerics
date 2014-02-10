@@ -67,6 +67,7 @@ package Formal.Numerics.Elementary_Functions is
    function Sin (X : Float) return Float with
      Post => Sin'Result in -1.0 .. 1.0
                and then (if X = 0.0 then Sin'Result = 0.0);
+   pragma Import(C, Sin, "sinf");
 
    function Sin (X, Cycle : Float) return Float with
      Pre => Cycle > 0.0,
@@ -76,6 +77,7 @@ package Formal.Numerics.Elementary_Functions is
    function Cos (X : Float) return Float with
      Post => Cos'Result in -1.0 .. 1.0
                and then (if X = 0.0 then Cos'Result = 1.0);
+   pragma Import(C, Cos, "cosf");
 
    function Cos (X, Cycle : Float) return Float with
      Pre => Cycle > 0.0,

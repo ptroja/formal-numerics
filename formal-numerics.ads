@@ -8,11 +8,11 @@ package Formal.Numerics is
    -- FIXME: external axiomatization of Pi and e as constants is not supported;
    -- instead, we define them as inlined functions.
 
---     Pi : constant := Ada.Numerics.Pi;
+     Pi : constant := Ada.Numerics.Pi;
 --     e : constant := Ada.Numerics.e;
 
-   function Pi return Float is (Ada.Numerics.Pi);
-   pragma inline(Pi);
+   --function Pi return Float is (Ada.Numerics.Pi);
+   --pragma inline(Pi);
 
    function e return Float is (Ada.Numerics.e);
    pragma inline(e);
