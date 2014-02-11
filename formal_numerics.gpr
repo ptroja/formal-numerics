@@ -1,13 +1,18 @@
 library project Formal_Numerics is
 
+   type Numerics_Implementation is
+      ("native", "libc");
+   Numerics : Numerics_Implementation := external ("numerics", "native");
+
    for Library_Name use "formal_numerics";
    for Library_Kind use "dynamic";
-   for Object_Dir use "obj";
-   for Library_Dir use "lib";
 
    package Compiler is
       for Default_Switches ("ada") use ("-gnat12");
    end Compiler;
 
-end Formal_Numerics;
+   for Source_Dirs use (Numerics);
+   for Object_Dir use Numerics & "/obj";
+   for Library_Dir use Numerics & "/lib";
 
+end Formal_Numerics;

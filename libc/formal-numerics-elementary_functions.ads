@@ -43,17 +43,16 @@ package Formal.Numerics.Elementary_Functions is
      Post => Sqrt'Result >= 0.0
                and then (if X = 0.0 then Sqrt'Result = 0.0)
                and then (if X = 1.0 then Sqrt'Result = 1.0);
+   pragma Import(C, Sqrt, "sqrtf");
 
    function Log (X : Float) return Float with
      Pre => X > 0.0,
      Post => (if X = 1.0 then Log'Result = 0.0);
-
-   function Log (X, Base : Float) return Float with
-     Pre => X > 0.0 and (Base > 0.0 and then Base /= 1.0),
-     Post => (if X = 1.0 then Log'Result = 0.0);
+   pragma Import(C, Log, "logf");
 
    function Exp (X : Float) return Float with
      Post => (if X = 0.0 then Exp'Result = 1.0);
+   pragma Import(C, Exp, "expf");
 
    function "**" (Left, Right : Float) return Float with
      Pre => (Left = 0.0 and then Right > 0.0) or
@@ -63,58 +62,31 @@ package Formal.Numerics.Elementary_Functions is
                and then (if Right = 1.0 then "**"'Result = Left)
                and then (if Left = 1.0 then "**"'Result = 1.0)
                and then (if Left = 0.0 then "**"'Result = 0.0);
+   pragma Import(C, "**", "powf");
 
    function Sin (X : Float) return Float with
      Post => Sin'Result in -1.0 .. 1.0
                and then (if X = 0.0 then Sin'Result = 0.0);
    pragma Import(C, Sin, "sinf");
 
-   function Sin (X, Cycle : Float) return Float with
-     Pre => Cycle > 0.0,
-     Post => Sin'Result in -1.0 .. 1.0
-               and then (if X = 0.0 then Sin'Result = 0.0);
-
    function Cos (X : Float) return Float with
      Post => Cos'Result in -1.0 .. 1.0
                and then (if X = 0.0 then Cos'Result = 1.0);
    pragma Import(C, Cos, "cosf");
 
-   function Cos (X, Cycle : Float) return Float with
-     Pre => Cycle > 0.0,
-     Post => Cos'Result in -1.0 .. 1.0
-               and then (if X = 0.0 then Cos'Result = 1.0);
-
    function Tan (X : Float) return Float with
      Post => (if X = 0.0 then Tan'Result = 0.0);
-
-   function Tan (X, Cycle : Float) return Float with
-     Pre => Cycle > 0.0 and then
-            abs Float'Remainder (X, Cycle) /= 0.25 * Cycle,
-     Post => (if X = 0.0 then Tan'Result = 0.0);
-
-   function Cot (X : Float) return Float with
-     Pre => X /= 0.0;
-
-   function Cot (X, Cycle : Float) return Float with
-     Pre => Cycle > 0.0 and then
-            X /= 0.0 and then
-            abs (Float'Remainder(X,Cycle)) /= 0.5 * Cycle;
+   pragma Import(C, Tan, "tanf");
 
    function Arcsin (X : Float) return Float with
      Pre => abs X <= 1.0,
      Post => (if X = 0.0 then Arcsin'Result = 0.0);
-
-   function Arcsin (X, Cycle : Float) return Float with
-     Pre => abs X <= 1.0 and then Cycle > 0.0,
-     Post => (if X = 0.0 then Arcsin'Result = 0.0);
+   pragma Import(C, Arcsin, "asinf");
 
    function Arccos (X : Float) return Float with
      Pre => abs X <= 1.0,
      Post => (if X = 1.0 then Arccos'Result = 0.0);
-
-   function Arccos (X, Cycle : Float) return Float with
-     Pre => abs X <= 1.0 and then Cycle > 0.0,
-     Post => (if X = 1.0 then Arccos'Result = 0.0);
+   pragma Import(C, Arccos, "acosf");
 
    function Arctan
      (Y : Float;
@@ -122,58 +94,35 @@ package Formal.Numerics.Elementary_Functions is
    with
      Pre => X /= 0.0 or Y /= 0.0,
      Post => (if X > 0.0 and Y = 0.0 then Arctan'Result = 0.0);
-
-   function Arctan
-     (Y     : Float;
-      X     : Float := 1.0;
-      Cycle : Float) return Float
-   with
-     Pre => (X /= 0.0 or Y /= 0.0) and then Cycle > 0.0,
-     Post => (if X > 0.0 and Y = 0.0 then Arctan'Result = 0.0);
-
-   function Arccot
-     (X   : Float;
-      Y   : Float := 1.0) return Float
-   with
-     Pre => X /= 0.0 or Y /= 0.0,
-     Post => (if X > 0.0 and Y = 0.0 then Arccot'Result = 0.0);
-
-   function Arccot
-     (X     : Float;
-      Y     : Float := 1.0;
-      Cycle : Float) return Float
-   with
-     Pre => (X /= 0.0 or Y /= 0.0) and then Cycle > 0.0,
-     Post => (if X > 0.0 and Y = 0.0 then Arccot'Result = 0.0);
+   pragma Import(C, Arctan, "atan2f");
 
    function Sinh (X : Float) return Float with
      Post => (if X = 0.0 then Sinh'Result = 0.0);
+   pragma Import(C, Sinh, "sinhf");
 
    function Cosh (X : Float) return Float with
      Post => Cosh'Result >= 1.0
                and then (if X = 0.0 then Cosh'Result = 1.0);
+   pragma Import(C, Cosh, "coshf");
 
    function Tanh (X : Float) return Float with
      Post => Tanh'Result in -1.0 .. 1.0
                and then (if X = 0.0 then Tanh'Result = 0.0);
-
-   function Coth (X : Float) return Float with
-     Pre => X /= 0.0,
-     Post => abs Coth'Result >= 1.0;
+   pragma Import(C, Tanh, "tanhf");
 
    function Arcsinh (X : Float) return Float with
      Post => (if X = 0.0 then Arcsinh'Result = 0.0);
+   pragma Import(C, Arcsinh, "asinhf");
 
    function Arccosh (X : Float) return Float with
      Pre => X >= 1.0,
      Post => Arccosh'Result >= 0.0
                and then (if X = 1.0 then Arccosh'Result = 0.0);
+   pragma Import(C, Arccosh, "acoshf");
 
    function Arctanh (X : Float) return Float with
      Pre => abs X < 1.0,
      Post => (if X = 0.0 then Arctanh'Result = 0.0);
-
-   function Arccoth (X : Float) return Float with
-     Pre => abs X > 1.0;
+   pragma Import(C, Arctanh, "atanhf");
 
 end Formal.Numerics.Elementary_Functions;
