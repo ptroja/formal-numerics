@@ -8,7 +8,7 @@ library project Formal_Numerics is
    for Library_Kind use "dynamic";
 
    package Compiler is
-      for Default_Switches ("ada") use ("-gnat12");
+      for Default_Switches ("ada") use ("-gnat12", "-O3");
    end Compiler;
 
    for Source_Dirs use (Numerics);
