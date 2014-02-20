@@ -1,0 +1,25 @@
+From 344b368e3a1ba08985f523906e520e56d2a88f8b Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Thu, 31 Oct 2013 18:01:33 +0000
+Subject: [PATCH 06/18] remove references to Pragma_Initializes (3)
+
+---
+ gnat2why/flow/flow_dependency_maps.adb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gnat2why/flow/flow_dependency_maps.adb b/gnat2why/flow/flow_dependency_maps.adb
+index bf9a578..6636597 100644
+--- a/gnat2why/flow/flow_dependency_maps.adb
++++ b/gnat2why/flow/flow_dependency_maps.adb
+@@ -42,7 +42,7 @@ package body Flow_Dependency_Maps is
+                                       return Optional_Dependency_Maps.Map
+      with Pre => Nkind (N) = N_Pragma and then
+                  Get_Pragma_Id (Chars (Pragma_Identifier (N))) in
+-                   Pragma_Depends | Pragma_Initializes;
++                   Pragma_Depends;
+    --  Helper function to parse something that looks like a dependency
+    --  map; in particular we can parse either a depends or an
+    --  initializes aspect.
+-- 
+1.9.0
+

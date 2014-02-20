@@ -1,0 +1,24 @@
+From 9cc6e14883dc1ce1732eea1d34ad03dd342156d6 Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Fri, 1 Nov 2013 16:23:25 +0000
+Subject: [PATCH 14/18] keep interface with frontend (see M318-012)
+
+---
+ gnat2why/spark/spark_definition.adb | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/gnat2why/spark/spark_definition.adb b/gnat2why/spark/spark_definition.adb
+index 554fa6c..2dd010e 100644
+--- a/gnat2why/spark/spark_definition.adb
++++ b/gnat2why/spark/spark_definition.adb
+@@ -2331,6 +2331,7 @@ package body SPARK_Definition is
+               N_Procedure_Instantiation                |
+               N_Real_Literal                           |
+               N_String_Literal                         |
++              N_Subprogram_Info                        |
+               N_Subprogram_Renaming_Declaration        |
+               N_Use_Package_Clause                     |
+               N_With_Clause                            |
+-- 
+1.9.0
+

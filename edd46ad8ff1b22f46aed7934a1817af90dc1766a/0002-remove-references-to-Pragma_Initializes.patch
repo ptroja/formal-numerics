@@ -1,0 +1,26 @@
+From dd720c8e24f5dd5b66e70712d0eda7afefb04639 Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Thu, 31 Oct 2013 16:48:29 +0000
+Subject: [PATCH 02/18] remove references to Pragma_Initializes
+
+---
+ gnat2why/flow/flow_tree_utility.adb | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/gnat2why/flow/flow_tree_utility.adb b/gnat2why/flow/flow_tree_utility.adb
+index b09d527..0b52e1d 100644
+--- a/gnat2why/flow/flow_tree_utility.adb
++++ b/gnat2why/flow/flow_tree_utility.adb
+@@ -132,8 +132,7 @@ package body Flow_Tree_Utility is
+                P := Scope (P);
+          end case;
+       end loop;
+-      P := Get_Pragma (P, Pragma_Initializes);
+-      if not Present (P) then
++      if True then
+          return Empty;
+       end if;
+ 
+-- 
+1.9.0
+

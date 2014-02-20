@@ -1,0 +1,46 @@
+From ad69abc5530d007fc5751c44b6821c3c031a3b78 Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Fri, 13 Dec 2013 23:43:43 +0000
+Subject: [PATCH 17/18] relax floating-point rounding and bounding
+
+---
+ share/spark/theories/_gnatprove_standard.mlw | 4 ++--
+ share/spark/theories/ada__model.mlw          | 4 +++-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/share/spark/theories/_gnatprove_standard.mlw b/share/spark/theories/_gnatprove_standard.mlw
+index c7fa255..d87915d 100644
+--- a/share/spark/theories/_gnatprove_standard.mlw
++++ b/share/spark/theories/_gnatprove_standard.mlw
+@@ -70,9 +70,9 @@ module Floating
+   use floating_point.Single
+   use floating_point.Double
+ 
+-  function round_single (x : real) : real = Single.round Rounding.NearestTiesToEven x
++  function round_single (x : real) : real = (* Single.round Rounding.NearestTiesToEven *) x
+ 
+-  function round_double (x : real) : real = Double.round Rounding.NearestTiesToEven x
++  function round_double (x : real) : real = (* Double.round Rounding.NearestTiesToEven *) x
+ 
+   use export _gnatprove_standard_th.Floating_Func
+ 
+diff --git a/share/spark/theories/ada__model.mlw b/share/spark/theories/ada__model.mlw
+index 3ba03a5..59f7e13 100644
+--- a/share/spark/theories/ada__model.mlw
++++ b/share/spark/theories/ada__model.mlw
+@@ -108,9 +108,11 @@ module Floating_Point
+   axiom representable_last :
+     round_real attr__ATTRIBUTE_LAST = attr__ATTRIBUTE_LAST
+ 
+-  predicate in_range  (x : real) =
++  predicate in_range2  (x : real) =
+    ( attr__ATTRIBUTE_FIRST <=. x <=. attr__ATTRIBUTE_LAST )
+ 
++  predicate in_range  (x : real) = true
++
+   function to_real t : real
+ 
+   function of_real real : t
+-- 
+1.9.0
+

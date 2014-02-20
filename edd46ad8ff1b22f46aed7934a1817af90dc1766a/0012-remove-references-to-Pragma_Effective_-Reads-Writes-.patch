@@ -1,0 +1,69 @@
+From a748efbc49b094fb27ffaf4aa9c050e69b635d30 Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Fri, 1 Nov 2013 15:13:10 +0000
+Subject: [PATCH 12/18] remove references to Pragma_Effective_{Reads,Writes}
+ and Pragma_Async_{Readers,Writers}
+
+---
+ gnat2why/flow/flow_types.adb | 17 ++++-------------
+ 1 file changed, 4 insertions(+), 13 deletions(-)
+
+diff --git a/gnat2why/flow/flow_types.adb b/gnat2why/flow/flow_types.adb
+index bd89273..41873f0 100644
+--- a/gnat2why/flow/flow_types.adb
++++ b/gnat2why/flow/flow_types.adb
+@@ -31,7 +31,6 @@ with Einfo;    use Einfo;
+ with Namet;    use Namet;
+ with Nlists;   use Nlists;
+ with Sem_Util; use Sem_Util;
+-with Snames;   use Snames;
+ 
+ with Output;   use Output;
+ with Casing;   use Casing;
+@@ -319,9 +318,7 @@ package body Flow_Types is
+          when Null_Value | Magic_String =>
+             return False;
+          when Direct_Mapping =>
+-            return Is_Volatile (F) and then
+-              Present (Get_Pragma (Get_Direct_Mapping_Id (F),
+-                                   Pragma_Async_Readers));
++            raise Why.Not_Implemented;
+          when Record_Field =>
+             raise Why.Not_Implemented;
+       end case;
+@@ -337,9 +334,7 @@ package body Flow_Types is
+          when Null_Value | Magic_String =>
+             return False;
+          when Direct_Mapping =>
+-            return Is_Volatile (F) and then
+-              Present (Get_Pragma (Get_Direct_Mapping_Id (F),
+-                                   Pragma_Async_Writers));
++            raise Why.Not_Implemented;
+          when Record_Field =>
+             raise Why.Not_Implemented;
+       end case;
+@@ -355,9 +350,7 @@ package body Flow_Types is
+          when Null_Value | Magic_String =>
+             return False;
+          when Direct_Mapping =>
+-            return Is_Volatile (F) and then
+-              Present (Get_Pragma (Get_Direct_Mapping_Id (F),
+-                                   Pragma_Effective_Reads));
++            raise Why.Not_Implemented;
+          when Record_Field =>
+             --  ??? to be implemented in M318-021
+             return False;
+@@ -374,9 +367,7 @@ package body Flow_Types is
+          when Null_Value | Magic_String =>
+             return False;
+          when Direct_Mapping =>
+-            return Is_Volatile (F) and then
+-              Present (Get_Pragma (Get_Direct_Mapping_Id (F),
+-                                   Pragma_Effective_Writes));
++            raise Why.Not_Implemented;
+          when Record_Field =>
+             raise Why.Not_Implemented;
+       end case;
+-- 
+1.9.0
+

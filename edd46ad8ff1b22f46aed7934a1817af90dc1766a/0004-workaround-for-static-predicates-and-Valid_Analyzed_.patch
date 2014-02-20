@@ -1,0 +1,36 @@
+From 54ab1e2eeca393dcd8885680384e88233a18628b Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Thu, 31 Oct 2013 17:07:30 +0000
+Subject: [PATCH 04/18] workaround for static predicates and
+ Valid_Analyzed_Entity
+
+---
+ gnat2why/flow/flow.ads | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/gnat2why/flow/flow.ads b/gnat2why/flow/flow.ads
+index 7ac9e71..38bfa55 100644
+--- a/gnat2why/flow/flow.ads
++++ b/gnat2why/flow/flow.ads
+@@ -94,7 +94,7 @@ package Flow is
+                                 E_Package |
+                                 E_Package_Body;
+ 
+-   type Flow_Analysis_Graphs_Root (Kind : Valid_Analyzed_Entity :=
++   type Flow_Analysis_Graphs_Root (Kind : Entity_Kind :=
+                                      E_Subprogram_Body)
+    is record
+       Analyzed_Entity   : Entity_Id;
+@@ -159,6 +159,9 @@ package Flow is
+ 
+          when E_Package_Body =>
+             null;
++
++         when others =>
++            null;
+       end case;
+    end record;
+ 
+-- 
+1.9.0
+

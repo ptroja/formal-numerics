@@ -1,0 +1,25 @@
+From bd397b29740a4acc5e882d90130b1092b6ca134a Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Thu, 31 Oct 2013 18:06:49 +0000
+Subject: [PATCH 07/18] keep Opt.SPARK_Mode instead of Opt.GNATprove_Mode
+
+---
+ gnat2why/why/back_end.adb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gnat2why/why/back_end.adb b/gnat2why/why/back_end.adb
+index 1dbdb8a..2450758 100644
+--- a/gnat2why/why/back_end.adb
++++ b/gnat2why/why/back_end.adb
+@@ -123,7 +123,7 @@ package body Back_End is
+       --  note that this flag needs to be set very early on, since e.g.
+       --  Scan_Compiler_Arguments uses it.
+ 
+-      Opt.GNATprove_Mode := True;
++      Opt.SPARK_Mode := True;
+ 
+       GNAT2Why_BE.Scan_Compiler_Arguments;
+ 
+-- 
+1.9.0
+

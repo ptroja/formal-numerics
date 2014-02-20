@@ -1,0 +1,59 @@
+From 7362f49840c125dafea06a9799d5c95edcb8fcca Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Fri, 1 Nov 2013 16:18:19 +0000
+Subject: [PATCH 13/18] remove references to Pragma_Initializes (4)
+
+---
+ gnat2why/flow/flow-control_flow_graph.adb | 36 ++-----------------------------
+ 1 file changed, 2 insertions(+), 34 deletions(-)
+
+diff --git a/gnat2why/flow/flow-control_flow_graph.adb b/gnat2why/flow/flow-control_flow_graph.adb
+index 39feb99..1f8d807 100644
+--- a/gnat2why/flow/flow-control_flow_graph.adb
++++ b/gnat2why/flow/flow-control_flow_graph.adb
+@@ -2510,40 +2510,8 @@ package body Flow.Control_Flow_Graph is
+             end;
+ 
+          when E_Package | E_Package_Body =>
+-            --  Packages have no obvious globals, but we can extract a
+-            --  list of global variables used from the optional rhs of
+-            --  the initialises clause:
+-            --
+-            --     Initializes => (State => (Global_A, ...),
+-            --
+-            --  Any other use of non-local variables is not legal (SRM
+-            --  7.1.5, verification rule 12).
+-            --
+-            --  Any such globals are global inputs *only* as packages
+-            --  are only allowed to initialise their own state.
+-            declare
+-               Initializes_Contract : constant Node_Id :=
+-                 (if FA.Kind = E_Package
+-                  then Get_Pragma (FA.Analyzed_Entity, Pragma_Initializes)
+-                  else Get_Pragma (Spec_Entity (FA.Analyzed_Entity),
+-                                   Pragma_Initializes));
+-            begin
+-               if Present (Initializes_Contract) then
+-                  for Opt_In of Parse_Initializes (Initializes_Contract) loop
+-                     if Opt_In.Exists then
+-                        for G of Opt_In.The_Set loop
+-                           Create_Initial_And_Final_Vertices
+-                             (F             => G,
+-                              Mode          => Mode_In,
+-                              Uninitialized =>
+-                                not Is_Initialized_At_Elaboration
+-                                (Get_Direct_Mapping_Id (G)),
+-                              FA            => FA);
+-                        end loop;
+-                     end if;
+-                  end loop;
+-               end if;
+-            end;
++            --  Packages have no globals
++            null;
+ 
+          when others =>
+             null;
+-- 
+1.9.0
+

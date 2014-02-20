@@ -1,0 +1,37 @@
+From 7b7ff62f32d46c55bd4b78e74150db16f8b852e6 Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Thu, 31 Oct 2013 16:37:24 +0000
+Subject: [PATCH 01/18] remove references to N_Freeze_Generic_Entity
+
+---
+ gnat2why/flow/flow-control_flow_graph.adb | 1 -
+ gnat2why/spark/spark_definition.adb       | 1 -
+ 2 files changed, 2 deletions(-)
+
+diff --git a/gnat2why/flow/flow-control_flow_graph.adb b/gnat2why/flow/flow-control_flow_graph.adb
+index 3d1f433..205dc0d 100644
+--- a/gnat2why/flow/flow-control_flow_graph.adb
++++ b/gnat2why/flow/flow-control_flow_graph.adb
+@@ -2176,7 +2176,6 @@ package body Flow.Control_Flow_Graph is
+       while Present (P) loop
+          case Nkind (P) is
+             when N_Freeze_Entity                |
+-              N_Freeze_Generic_Entity           |
+               N_Label                           |
+               N_Implicit_Label_Declaration      |
+               N_Subprogram_Body                 |
+diff --git a/gnat2why/spark/spark_definition.adb b/gnat2why/spark/spark_definition.adb
+index 35a4744..c1b5eb9 100644
+--- a/gnat2why/spark/spark_definition.adb
++++ b/gnat2why/spark/spark_definition.adb
+@@ -2264,7 +2264,6 @@ package body SPARK_Definition is
+               N_Formal_Subprogram_Declaration          |
+               N_Formal_Type_Declaration                |
+               N_Freeze_Entity                          |
+-              N_Freeze_Generic_Entity                  |
+               N_Function_Instantiation                 |
+               N_Generic_Function_Renaming_Declaration  |
+               N_Generic_Package_Declaration            |
+-- 
+1.9.0
+

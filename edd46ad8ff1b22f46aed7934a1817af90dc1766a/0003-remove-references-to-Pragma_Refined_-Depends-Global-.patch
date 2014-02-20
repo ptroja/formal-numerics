@@ -1,0 +1,93 @@
+From fcd93bd695c7f399a2bb14802f509d5f05f8aad4 Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Thu, 31 Oct 2013 16:58:20 +0000
+Subject: [PATCH 03/18] remove references to
+ Pragma_Refined_{Depends,Global,State} and Aspect_Refined_Global
+
+---
+ gnat2why/flow/flow-analysis.adb           | 6 +++---
+ gnat2why/flow/flow-control_flow_graph.adb | 4 ----
+ gnat2why/flow/flow.adb                    | 4 +---
+ gnat2why/spark/spark_definition.adb       | 4 +---
+ 4 files changed, 5 insertions(+), 13 deletions(-)
+
+diff --git a/gnat2why/flow/flow-analysis.adb b/gnat2why/flow/flow-analysis.adb
+index 8ff6a22..0f36f13 100644
+--- a/gnat2why/flow/flow-analysis.adb
++++ b/gnat2why/flow/flow-analysis.adb
+@@ -522,15 +522,15 @@ package body Flow.Analysis is
+       case Ekind (S) is
+          when E_Package_Body =>
+             Haystack_A := Empty;
+-            Haystack_B := Get_Pragma (Spec_Entity (S), Pragma_Initializes);
++            Haystack_B := Empty;
+ 
+          when E_Package =>
+             Haystack_A := Empty;
+-            Haystack_B := Get_Pragma (S, Pragma_Initializes);
++            Haystack_B := Empty;
+ 
+          when others =>
+             if Present (Get_Body (S)) then
+-               Haystack_A := Get_Pragma (Get_Body (S), Pragma_Refined_Global);
++               Haystack_A := Empty;
+             else
+                Haystack_A := Empty;
+             end if;
+diff --git a/gnat2why/flow/flow-control_flow_graph.adb b/gnat2why/flow/flow-control_flow_graph.adb
+index 205dc0d..3fe214a 100644
+--- a/gnat2why/flow/flow-control_flow_graph.adb
++++ b/gnat2why/flow/flow-control_flow_graph.adb
+@@ -2316,7 +2316,6 @@ package body Flow.Control_Flow_Graph is
+               Pragma_Elaborate_Body               |
+               Pragma_Export                       |
+               Pragma_Global                       |
+-              Pragma_Initializes                  |
+               Pragma_Inline                       |
+               Pragma_Inline_Always                |
+               Pragma_Overflow_Mode                |
+@@ -2327,9 +2326,6 @@ package body Flow.Control_Flow_Graph is
+               Pragma_Preelaborable_Initialization |
+               Pragma_Pure                         |
+               Pragma_Pure_Function                |
+-              Pragma_Refined_Depends              |
+-              Pragma_Refined_Global               |
+-              Pragma_Refined_State                |
+               Pragma_SPARK_Mode                   |
+               Pragma_Test_Case                    |
+               Pragma_Warnings                     =>
+diff --git a/gnat2why/flow/flow.adb b/gnat2why/flow/flow.adb
+index 2f2ab77..55baf26 100644
+--- a/gnat2why/flow/flow.adb
++++ b/gnat2why/flow/flow.adb
+@@ -245,11 +245,9 @@ package body Flow is
+       Writes := Flow_Id_Sets.Empty_Set;
+ 
+       if Refined_View and then Present (Body_E) and then
+-        Present (Get_Pragma (Body_E, Pragma_Refined_Global))
++        False --  Present (Get_Pragma (Body_E, Pragma_Refined_Global))
+       then
+          Has_Global_Aspect := True;
+-         Global_Node       := Get_Pragma (Body_E, Pragma_Refined_Global);
+-
+       elsif Present (Get_Pragma (Subprogram, Pragma_Global)) then
+          Has_Global_Aspect := True;
+          Global_Node       := Get_Pragma (Subprogram, Pragma_Global);
+diff --git a/gnat2why/spark/spark_definition.adb b/gnat2why/spark/spark_definition.adb
+index c1b5eb9..92c37b9 100644
+--- a/gnat2why/spark/spark_definition.adb
++++ b/gnat2why/spark/spark_definition.adb
+@@ -3074,9 +3074,7 @@ package body SPARK_Definition is
+          --  SPARK pragmas
+ 
+          when Pragma_Global          |
+-              Pragma_Refined_Global  |
+-              Pragma_Depends         |
+-              Pragma_Refined_Depends =>
++              Pragma_Depends         =>
+             null;
+ 
+          --  Ignored pragmas, either because they are already taken into
+-- 
+1.9.0
+

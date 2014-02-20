@@ -1,0 +1,64 @@
+From c42233b77d8f54d900c37a4eed6cd28f31a46f39 Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Fri, 1 Nov 2013 00:23:14 +0000
+Subject: [PATCH 08/18] force generation of ALI files (see M719-003)
+
+---
+ Makefile.libprove       | 18 ++++++------------
+ gnatprove/gnatprove.adb |  1 +
+ 2 files changed, 7 insertions(+), 12 deletions(-)
+
+diff --git a/Makefile.libprove b/Makefile.libprove
+index 3d9f6c9..94cffae 100644
+--- a/Makefile.libprove
++++ b/Makefile.libprove
+@@ -30,28 +30,22 @@ EXCLUDE_OBJ:= \
+ ALL_OBJS := $(filter-out $(EXCLUDE_OBJ), $(GNARL_OBJS) $(GNAT_OBJS))
+ ALL_ALIS:=$(ALL_OBJS:.o=.ali)
+ ALL_WHYPACK:=$(ALL_ALIS:.ali=__package.mlw)
+-GLOBAL_GEN_ARG_FILE:= global_args.tmp
+ 
+ all: $(ALL_ALIS)
+ 
+ check: $(ALL_WHYPACK:__package.mlw=.check)
+ 
+ %__package.mlw: %.adb $(ALL_ALIS)
+-	$(GNAT2WHY) -gnatpg -gnatws -I. $<
++	$(GNAT2WHY) -gnatd.F -gnatpg -gnatws -I. $<
+ 
+ %__package.mlw: %.ads $(ALL_ALIS)
+-	$(GNAT2WHY) -gnatpg -gnatws -I. $<
++	$(GNAT2WHY) -gnatd.F -gnatpg -gnatws -I. $<
+ 
+-.PHONY: force
++%.ali: %.adb
++	env GNAT2WHY_ARGS="global_gen_mode" $(GNAT2WHY) -c -gnatc -gnatpg -gnatd.G $<
+ 
+-$(GLOBAL_GEN_ARG_FILE): force
+-	@echo "global_gen_mode" > $@
+-
+-%.ali: %.adb $(GLOBAL_GEN_ARG_FILE)
+-	$(GNAT2WHY) -c -gnatc -gnatpg -gnatws -gnates=$(GLOBAL_GEN_ARG_FILE) $<
+-
+-%.ali: %.ads $(GLOBAL_GEN_ARG_FILE)
+-	$(GNAT2WHY) -c -gnatc -gnatpg -gnatws -gnates=$(GLOBAL_GEN_ARG_FILE) $<
++%.ali: %.ads
++	env GNAT2WHY_ARGS="global_gen_mode" $(GNAT2WHY) -c -gnatc -gnatpg -gnatd.G -gnatws $<
+ 
+ %.check: %__package.mlw $(ALL_WHYPACK) $(WHY_STANDARD)
+ 	if [ -f $*__types_in_spec.mlw ] ; then why3 -L ../share/gnatprove/theories --type-only -L . $*__types_in_spec.mlw > /dev/null ; fi
+diff --git a/gnatprove/gnatprove.adb b/gnatprove/gnatprove.adb
+index 7b3d0f1..ef4d055 100644
+--- a/gnatprove/gnatprove.adb
++++ b/gnatprove/gnatprove.adb
+@@ -218,6 +218,7 @@ procedure Gnatprove is
+ 
+       Args.Append ("-cargs:Ada");
+       Args.Append ("-gnatc");       --  only generate ALI
++      Args.Append ("-gnatd.G");     --  ALI file generation
+ 
+       Args.Append ("-gnates=" & Opt_File);
+       Call_Gprbuild (Project_File,
+-- 
+1.9.0
+

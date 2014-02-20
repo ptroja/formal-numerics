@@ -1,0 +1,461 @@
+From 26ff594258579a6a7a27ae9288dd4d002765692e Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Fri, 1 Nov 2013 01:51:07 +0000
+Subject: [PATCH 10/18] keep passing options by environment variables (see
+ M819-020)
+
+---
+ common/gnat2why_args.adb | 146 ++++++++++++++++++++++++++---------------------
+ common/gnat2why_args.ads |  38 ++++++------
+ gnatprove/gnatprove.adb  |  69 +++++++---------------
+ 3 files changed, 123 insertions(+), 130 deletions(-)
+
+diff --git a/common/gnat2why_args.adb b/common/gnat2why_args.adb
+index 9fb2fe8..f9f5eb1 100644
+--- a/common/gnat2why_args.adb
++++ b/common/gnat2why_args.adb
+@@ -23,25 +23,15 @@
+ --                                                                          --
+ ------------------------------------------------------------------------------
+ 
+-with GNAT.Directory_Operations; use GNAT.Directory_Operations;
+-with GNAT.OS_Lib;               use GNAT.OS_Lib;
++with Ada.Environment_Variables;
++with Ada.Text_IO;
+ 
+-with Call;                      use Call;
+ with Output;                    use Output;
+ with Types;                     use Types;
+ 
+ package body Gnat2Why_Args is
+ 
+-   --  The extra options are passed to gnat2why using a file, specified
+-   --  via -gnates. This file contains on each line a single argument.
+-   --  Each argument is of the form
+-   --    name=value
+-   --  where neither "name" nor "value" can contain spaces. Each "name"
+-   --  corresponds to a global variable in this package (lower case).
+-
+-   --  For boolean variables, the presence of the name means "true", absence
+-   --  means "false". For other variables, the value is given after the "="
+-   --  sign. No "=value" part is allowed for boolean variables.
++   Env_Variable_Name : constant String := "GNAT2WHY_ARGS";
+ 
+    Warning_Mode_Name        : constant String := "warning_mode";
+    Global_Gen_Mode_Name     : constant String := "global_gen_mode";
+@@ -64,13 +54,41 @@ package body Gnat2Why_Args is
+    ----------
+ 
+    procedure Init is
++      Args_String : constant String :=
++        Ada.Environment_Variables.Value (Env_Variable_Name, Default => "");
++      Start : Integer := Args_String'First;
++   begin
++      while Start in Args_String'Range loop
++         declare
++            Ending : Integer := Start;
++         begin
+ 
+-      procedure Read_File is new For_Line_In_File (Interpret_Token);
++            --  Search for the next blank and store its position in [Ending]
+ 
+-   begin
+-      if Opt.SPARK_Switches_File_Name /= null then
+-         Read_File (Opt.SPARK_Switches_File_Name.all);
+-      end if;
++            while Ending in Args_String'Range and then
++              Args_String (Ending) /= ' ' loop
++               Ending := Ending + 1;
++            end loop;
++
++            if Start /= Ending then
++
++               --  We have recognized a token, take it into account
++
++               Interpret_Token (Args_String (Start .. Ending - 1));
++
++            else
++
++               --  Here we have Start = Ending, so either there are two spaces
++               --  in a row, or a space at the start, or we are at the end of
++               --  the string. In any case, we just continue.
++
++               null;
++
++            end if;
++
++            Start := Ending + 1;
++         end;
++      end loop;
+    end Init;
+ 
+    ---------------------
+@@ -144,35 +162,9 @@ package body Gnat2Why_Args is
+    -- Set --
+    ---------
+ 
+-   function Set (Obj_Dir : String) return String is
+-      Cur_Dir : constant String := Get_Current_Dir;
+-      FD      : File_Descriptor;
+-      Name    : GNAT.OS_Lib.String_Access;
+-
+-      procedure Write_Line (S : String);
+-      --  Write S to FD, and add a newline
+-
+-      ----------------
+-      -- Write_Line --
+-      ----------------
+-
+-      procedure Write_Line (S : String) is
+-         N : Integer;
+-         pragma Unreferenced (N);
+-      begin
+-         N := Write (FD, S'Address, S'Length);
+-         N := Write (FD, ASCII.LF'Address, 1);
+-      end Write_Line;
+-
+-      --  beginning of processing for Set
+-
++   procedure Set (Debug : Boolean) is
++      Val : Unbounded_String := Null_Unbounded_String;
+    begin
+-      --  We need to switch to the given Obj_Dir so that the temp file is
+-      --  created there
+-
+-      Change_Dir (Obj_Dir);
+-      Create_Temp_Output_File (FD, Name);
+-
+       --  Warning_Mode is only relevant when Global_Mode = False, so ignore its
+       --  value if Global_Mode = True.
+ 
+@@ -182,50 +174,76 @@ package body Gnat2Why_Args is
+       end if;
+ 
+       if Global_Gen_Mode then
+-         Write_Line (Global_Gen_Mode_Name);
++         Append (Val, ' ');
++         Append (Val, Global_Gen_Mode_Name);
+       end if;
+ 
+       if Check_Mode then
+-         Write_Line (Check_Mode_Name);
++         Append (Val, ' ');
++         Append (Val, Check_Mode_Name);
+       end if;
+ 
+       if Flow_Analysis_Mode then
+-         Write_Line (Flow_Analysis_Mode_Name);
++         Append (Val, ' ');
++         Append (Val, Flow_Analysis_Mode_Name);
+       end if;
+ 
+       if Flow_Debug_Mode then
+-         Write_Line (Flow_Debug_Mode_Name);
++         Append (Val, ' ');
++         Append (Val, Flow_Debug_Mode_Name);
+       end if;
+ 
+       if Flow_Advanced_Debug then
+-         Write_Line (Flow_Advanced_Debug_Name);
++         Append (Val, ' ');
++         Append (Val, Flow_Advanced_Debug_Name);
+       end if;
+ 
+       if Pedantic then
+-         Write_Line (Pedantic_Name);
++         Append (Val, ' ');
++         Append (Val, Pedantic_Name);
+       end if;
+ 
+       if Ide_Mode then
+-         Write_Line (Ide_Mode_Name);
++         Append (Val, ' ');
++         Append (Val, Ide_Mode_Name);
+       end if;
+ 
+       for File of Analyze_File loop
+-         Write_Line (Analyze_File_Name & "=" & File);
++         Append (Val, ' ');
++         Append (Val, Analyze_File_Name);
++         Append (Val, '=');
++         Append (Val, File);
+       end loop;
+ 
+       if Limit_Subp /= Null_Unbounded_String then
+-         Write_Line (Limit_Subp_Name & "=" & To_String (Limit_Subp));
++         Append (Val, ' ');
++         Append (Val, Limit_Subp_Name);
++         Append (Val, '=');
++         Append (Val, Limit_Subp);
+       end if;
++      if Val /= "" then
++         declare
++            Val_Str : constant String := To_String (Val);
++         begin
++            if Debug then
++               Ada.Text_IO.Put_Line ("Setting " & Env_Variable_Name &
++                                     " to """ & Val_Str & """");
++            end if;
++            Ada.Environment_Variables.Set (Name  => Env_Variable_Name,
++                                           Value => Val_Str);
++         end;
++      else
++         Clear;
++      end if;
++   end Set;
+ 
+-      Close (FD);
+-      Change_Dir (Cur_Dir);
++   -----------
++   -- Clear --
++   -----------
+ 
+-      declare
+-         S : constant String := Name.all;
+-      begin
+-         Free (Name);
+-         return Obj_Dir & Dir_Separator & S;
+-      end;
+-   end Set;
++   procedure Clear is
++   begin
++      Ada.Environment_Variables.Clear (Env_Variable_Name);
++   end Clear;
+ 
+ end Gnat2Why_Args;
+diff --git a/common/gnat2why_args.ads b/common/gnat2why_args.ads
+index d47bf68..cbdfc38 100644
+--- a/common/gnat2why_args.ads
++++ b/common/gnat2why_args.ads
+@@ -33,21 +33,22 @@ package Gnat2Why_Args is
+    --  This unit defines and initializes extra options of gnat2why, that are
+    --  not relevant to the GNAT frontend.
+ 
+-   --  These package defines both the reading and the writing of these extra
+-   --  options. There are two ways to use this package, depending on whether
+-   --  you are on the reading side (gnat2why) or the writing side (gnatprove).
++   --  Today, these options are read from the environment variable
++   --  GNAT2WHY_ARGS. This variable contains a list of arguments separated
++   --  by spaces. Each argument is of the form
++   --    name=value
++   --  where neither "name" nor "value" can contain spaces. The "=value"
++   --  part is optional. Each "name" corresponds to a global variable in
++   --  this package (lower case).
+ 
+-   --  For reading the extra options, simply call "init". Now the global
+-   --  variables defined at the beginning of this package are set corresponding
+-   --  to the extra options.
++   --  For boolean variables, the presence of the name means "true", absence
++   --  means "false". For other variables, the value is given after the "="
++   --  sign.
+ 
+-   --  For writing extra options, set the global variables to the required
+-   --  values, and call "Set".
++   --  Reading in the environment variable is done by a call to [Init].
+ 
+-   --  These extra options are stored in a file that is passed to gnat2why
+-   --  using the extra switch "-gnates=<file>". See the body of this package
+-   --  for the format of this file, the spec only describes what is needed for
+-   --  interfacing.
++   --  Setting the environment variable is done by changing the values of the
++   --  variables and calling [Set].
+ 
+    -------------------------------------
+    -- Options defined in this package --
+@@ -115,12 +116,13 @@ package Gnat2Why_Args is
+    --------------------------------
+ 
+    procedure Init;
+-   --  Read the extra options information and set the corresponding global
+-   --  variables above.
++   --  Read the environment variable GNAT2WHY_Args and set the corresponding
++   --  options.
+ 
+-   function Set (Obj_Dir : String) return String;
+-   --  Read the above variables and prepare passing them to gnat2why. Obj_Dir
+-   --  is a place to store temp files, and the return value is the full name
+-   --  of the file that is to be passed to gnat2why using -gnates=<file>.
++   procedure Set (Debug : Boolean);
++   --  Read the above variables and set the environment variable
++
++   procedure Clear;
++   --  Clear the environment variable, do not change the variables.
+ 
+ end Gnat2Why_Args;
+diff --git a/gnatprove/gnatprove.adb b/gnatprove/gnatprove.adb
+index ef4d055..c6fea0f 100644
+--- a/gnatprove/gnatprove.adb
++++ b/gnatprove/gnatprove.adb
+@@ -66,7 +66,6 @@ procedure Gnatprove is
+ 
+    procedure Compute_ALI_Information
+       (Project_File : String;
+-       Proj         : Project_Tree;
+        Status : out Integer);
+    --  Compute ALI information for all source units, using gnatmake.
+ 
+@@ -99,9 +98,8 @@ procedure Gnatprove is
+      (Gnatprove_Subdir : String);
+ 
+    procedure Translate_To_Why
+-      (Project_File     : String;
+-       Proj             : Project_Tree;
+-       Status           : out Integer);
++      (Project_File : String;
++       Status : out Integer);
+    --  Translate all source units to Why, using gnat2why, driven by gprbuild.
+ 
+    function Text_Of_Step (Step : Gnatprove_Step) return String;
+@@ -111,9 +109,7 @@ procedure Gnatprove is
+    --  In particular, add any needed directories in the PATH and
+    --  GPR_PROJECT_PATH env vars.
+ 
+-   function Pass_Extra_Options_To_Gnat2why
+-      (Translation_Phase : Boolean;
+-       Obj_Dir           : String) return String;
++   procedure Set_Gnat2why_Env_Var (Translation_Phase : Boolean);
+    --  Set the environment variable which passes some options to gnat2why.
+    --  Translation_Phase is False for globals generation, and True for
+    --  translation to Why.
+@@ -185,18 +181,10 @@ procedure Gnatprove is
+ 
+    procedure Compute_ALI_Information
+      (Project_File : String;
+-      Proj         : Project_Tree;
+       Status       : out Integer)
+    is
+       use String_Lists;
+-      Args     : List := Empty_List;
+-      Obj_Dir  : constant String :=
+-         Proj.Root_Project.Object_Dir.Display_Full_Name;
+-      Opt_File : constant String :=
+-         Pass_Extra_Options_To_Gnat2why
+-            (Translation_Phase => False,
+-             Obj_Dir           => Obj_Dir);
+-      Del_Succ : Boolean;
++      Args : List := Empty_List;
+    begin
+       Args.Append ("--subdirs=" & String (Subdir_Name));
+       Args.Append ("--restricted-to-languages=ada");
+@@ -220,16 +208,14 @@ procedure Gnatprove is
+       Args.Append ("-gnatc");       --  only generate ALI
+       Args.Append ("-gnatd.G");     --  ALI file generation
+ 
+-      Args.Append ("-gnates=" & Opt_File);
++      Set_Gnat2why_Env_Var (Translation_Phase => False);
+       Call_Gprbuild (Project_File,
+                      Gpr_Frames_Cnf_File,
+                      Parallel,
+                      RTS_Dir.all,
+                      Args,
+                      Status);
+-      if Status = 0 and then not Debug then
+-         GNAT.OS_Lib.Delete_File (Opt_File, Del_Succ);
+-      end if;
++      Gnat2Why_Args.Clear;
+    end Compute_ALI_Information;
+ 
+    -----------------
+@@ -356,7 +342,7 @@ procedure Gnatprove is
+ 
+       case Step is
+          when GS_ALI =>
+-            Compute_ALI_Information (Project_File, Proj, Status);
++            Compute_ALI_Information (Project_File, Status);
+             if Status /= 0
+               and then MMode = GPM_Check
+             then
+@@ -364,7 +350,7 @@ procedure Gnatprove is
+             end if;
+ 
+          when GS_Gnat2Why =>
+-            Translate_To_Why (Project_File, Proj, Status);
++            Translate_To_Why (Project_File, Status);
+             if Status /= 0
+               and then MMode = GPM_Check
+             then
+@@ -572,15 +558,12 @@ procedure Gnatprove is
+            Libgnat & Path_Separator & Sharegpr & Path_Separator & Gpr_Val);
+    end Set_Environment;
+ 
+-   ------------------------------------
+-   -- Pass_Extra_Options_To_Gnat2why --
+-   ------------------------------------
++   --------------------------
++   -- Set_Gnat2why_Env_Var --
++   --------------------------
+ 
+-   function Pass_Extra_Options_To_Gnat2why
+-      (Translation_Phase : Boolean;
+-       Obj_Dir           : String) return String is
++   procedure Set_Gnat2why_Env_Var (Translation_Phase : Boolean) is
+    begin
+-
+       --  In the translation phase, set a number of values
+ 
+       if Translation_Phase then
+@@ -602,8 +585,8 @@ procedure Gnatprove is
+          Gnat2Why_Args.Global_Gen_Mode := True;
+       end if;
+ 
+-      return Gnat2Why_Args.Set (Obj_Dir);
+-   end Pass_Extra_Options_To_Gnat2why;
++      Gnat2Why_Args.Set (Debug);
++   end Set_Gnat2why_Env_Var;
+ 
+    ------------------
+    -- Text_Of_Step --
+@@ -633,20 +616,13 @@ procedure Gnatprove is
+    ----------------------
+ 
+    procedure Translate_To_Why
+-      (Project_File     : String;
+-       Proj             : Project_Tree;
+-       Status           : out Integer)
++      (Project_File : String;
++       Status : out Integer)
+    is
+       use String_Lists;
+-      Cur     : Cursor := First (Cargs_List);
+-      Args    : String_Lists.List := Empty_List;
+-      Obj_Dir : constant String :=
+-         Proj.Root_Project.Object_Dir.Display_Full_Name;
+-      Opt_File : aliased constant String :=
+-         Pass_Extra_Options_To_Gnat2why
+-            (Translation_Phase => True,
+-             Obj_Dir           => Obj_Dir);
+-      Del_Succ : Boolean;
++      Cur    : Cursor := First (Cargs_List);
++      Args   : String_Lists.List := Empty_List;
++
+    begin
+       Args.Append ("--subdirs=" & String (Subdir_Name));
+       Args.Append ("--restricted-to-languages=ada");
+@@ -664,22 +640,19 @@ procedure Gnatprove is
+          Args.Append ("-gnatw.d"); -- generation of unique tag
+       end if;
+ 
+-      Args.Append ("-gnates=" & Opt_File);
+-
+       while Has_Element (Cur) loop
+          Args.Append (Element (Cur));
+          Next (Cur);
+       end loop;
+ 
++      Set_Gnat2why_Env_Var (Translation_Phase => True);
+       Call_Gprbuild (Project_File,
+                      Gpr_Translation_Cnf_File,
+                      Parallel,
+                      RTS_Dir.all,
+                      Args,
+                      Status);
+-      if Status = 0 and then not Debug then
+-         GNAT.OS_Lib.Delete_File (Opt_File, Del_Succ);
+-      end if;
++      Gnat2Why_Args.Clear;
+    end Translate_To_Why;
+ 
+    Tree      : Project_Tree;
+-- 
+1.9.0
+

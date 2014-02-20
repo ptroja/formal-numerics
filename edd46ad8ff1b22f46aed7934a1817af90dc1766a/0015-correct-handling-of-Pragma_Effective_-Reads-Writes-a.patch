@@ -1,0 +1,53 @@
+From b1ba532ef9d4a4b07f0d8b3ac1f48314a8ef2b36 Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Fri, 1 Nov 2013 22:37:26 +0000
+Subject: [PATCH 15/18] correct handling of Pragma_Effective_{Reads,Writes} and
+ Pragma_Async_{Readers,Writers}
+
+---
+ gnat2why/flow/flow_types.adb | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/gnat2why/flow/flow_types.adb b/gnat2why/flow/flow_types.adb
+index 41873f0..7849aa7 100644
+--- a/gnat2why/flow/flow_types.adb
++++ b/gnat2why/flow/flow_types.adb
+@@ -318,7 +318,7 @@ package body Flow_Types is
+          when Null_Value | Magic_String =>
+             return False;
+          when Direct_Mapping =>
+-            raise Why.Not_Implemented;
++            return False;
+          when Record_Field =>
+             raise Why.Not_Implemented;
+       end case;
+@@ -334,7 +334,7 @@ package body Flow_Types is
+          when Null_Value | Magic_String =>
+             return False;
+          when Direct_Mapping =>
+-            raise Why.Not_Implemented;
++            return False;
+          when Record_Field =>
+             raise Why.Not_Implemented;
+       end case;
+@@ -350,7 +350,7 @@ package body Flow_Types is
+          when Null_Value | Magic_String =>
+             return False;
+          when Direct_Mapping =>
+-            raise Why.Not_Implemented;
++            return False;
+          when Record_Field =>
+             --  ??? to be implemented in M318-021
+             return False;
+@@ -367,7 +367,7 @@ package body Flow_Types is
+          when Null_Value | Magic_String =>
+             return False;
+          when Direct_Mapping =>
+-            raise Why.Not_Implemented;
++            return False;
+          when Record_Field =>
+             raise Why.Not_Implemented;
+       end case;
+-- 
+1.9.0
+

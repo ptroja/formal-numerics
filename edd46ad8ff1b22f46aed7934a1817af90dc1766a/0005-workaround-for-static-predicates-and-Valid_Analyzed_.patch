@@ -1,0 +1,103 @@
+From 63a8618a06d40b33e9fafc0f7ff5581e900509a2 Mon Sep 17 00:00:00 2001
+From: Piotr Trojanek <piotr.trojanek@gmail.com>
+Date: Thu, 31 Oct 2013 17:15:18 +0000
+Subject: [PATCH 05/18] workaround for static predicates and
+ Valid_Analyzed_Entity (2)
+
+---
+ gnat2why/flow/flow-control_flow_graph.adb | 18 ++++++++++++++++++
+ gnat2why/flow/flow.adb                    |  7 ++++++-
+ 2 files changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/gnat2why/flow/flow-control_flow_graph.adb b/gnat2why/flow/flow-control_flow_graph.adb
+index 3fe214a..39feb99 100644
+--- a/gnat2why/flow/flow-control_flow_graph.adb
++++ b/gnat2why/flow/flow-control_flow_graph.adb
+@@ -2403,6 +2403,9 @@ package body Flow.Control_Flow_Graph is
+          when E_Package_Body =>
+             Body_N := FA.Scope;
+             Spec_N := Get_Enclosing_Scope (Corresponding_Spec (Body_N));
++
++         when others =>
++            null;
+       end case;
+ 
+       --  Create the magic start and end vertices.
+@@ -2434,6 +2437,9 @@ package body Flow.Control_Flow_Graph is
+          when E_Package | E_Package_Body =>
+             --  No parameters to see here.
+             null;
++
++         when others =>
++            null;
+       end case;
+ 
+       --  Collect globals for the analyzed entity and create initial
+@@ -2539,6 +2545,9 @@ package body Flow.Control_Flow_Graph is
+                end if;
+             end;
+ 
++         when others =>
++            null;
++
+       end case;
+ 
+       --  Collect variables introduced by quantified expressions. We
+@@ -2581,6 +2590,9 @@ package body Flow.Control_Flow_Graph is
+                   FA, Connection_Map, The_Context);
+             end if;
+ 
++         when others =>
++            null;
++
+       end case;
+ 
+       --  If we are dealing with a function, we use its entity to deal
+@@ -2615,6 +2627,9 @@ package body Flow.Control_Flow_Graph is
+          when E_Package | E_Package_Body =>
+             --  !!! process initial condition
+             null;
++
++         when others =>
++            null;
+       end case;
+ 
+       --  Produce flowgraphs for the body and link to start and end
+@@ -2674,6 +2689,9 @@ package body Flow.Control_Flow_Graph is
+                        FA.End_Vertex);
+ 
+             end;
++
++         when others =>
++            null;
+       end case;
+ 
+       --  Simplify graph by removing all null vertices.
+diff --git a/gnat2why/flow/flow.adb b/gnat2why/flow/flow.adb
+index 55baf26..cd2b111 100644
+--- a/gnat2why/flow/flow.adb
++++ b/gnat2why/flow/flow.adb
+@@ -196,7 +196,9 @@ package body Flow is
+           when E_Package =>
+              Ekind (X.Analyzed_Entity) = E_Package,
+           when E_Package_Body =>
+-             Ekind (X.Analyzed_Entity) = E_Package_Body
++             Ekind (X.Analyzed_Entity) = E_Package_Body,
++          when others =>
++             False
+       );
+ 
+    -------------------------------
+@@ -1063,6 +1065,9 @@ package body Flow is
+                   Analysis.Find_Use_Of_Uninitialised_Variables (FA);
+                   Analysis.Find_Ineffective_Statements (FA);
+                   Analysis.Find_Illegal_Updates (FA);
++
++               when others =>
++                  null;
+             end case;
+          end if;
+ 
+-- 
+1.9.0
+
