@@ -1,0 +1,1449 @@
+module Ada__containers__formal_vectors__index_type_helper
+  use import int.Int
+ use import "_gnatprove_standard".Main
+  use Ada__containers__count_type
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__index_type
+
+  function index_type_length "inline" : int =
+      Ada__containers__formal_vectors__index_type.attr__ATTRIBUTE_LAST -
+      Ada__containers__formal_vectors__index_type.attr__ATTRIBUTE_FIRST + 1
+
+  axiom index_type_length:
+      Ada__containers__count_type.in_range (index_type_length)
+
+  function index_type__to_index "inline" (i : int) : int =
+     i - Ada__containers__formal_vectors__index_type.attr__ATTRIBUTE_FIRST + 1
+
+  function index_type__of_index "inline" (i : int) : int =
+      i + Ada__containers__formal_vectors__index_type.attr__ATTRIBUTE_FIRST - 1
+
+end
+
+module Ada__containers__formal_vectors__capacity_range
+ use import "int".Int
+ use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__index_type_helper
+
+ type capacity_range
+
+ function attr__ATTRIBUTE_FIRST  : int = 0
+
+ function attr__ATTRIBUTE_LAST  : int = index_type_length
+
+ function attr__ATTRIBUTE_MODULUS :int
+
+ clone export "ada__model".Discrete with
+ type t = capacity_range,
+ function attr__ATTRIBUTE_FIRST = attr__ATTRIBUTE_FIRST,
+ function attr__ATTRIBUTE_LAST = attr__ATTRIBUTE_LAST
+end
+
+module  Ada__containers__formal_vectors__extended_index
+ use import "int".Int
+ use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__index_type
+
+ type extended_index
+
+ function attr__ATTRIBUTE_FIRST  : int =
+      Ada__containers__formal_vectors__index_type.attr__ATTRIBUTE_FIRST - 1
+
+ function attr__ATTRIBUTE_LAST  : int =
+      Ada__containers__formal_vectors__index_type.attr__ATTRIBUTE_LAST
+
+ function attr__ATTRIBUTE_MODULUS :int
+
+ clone export "ada__model".Discrete with
+ type t = extended_index,
+ function attr__ATTRIBUTE_FIRST = attr__ATTRIBUTE_FIRST,
+ function attr__ATTRIBUTE_LAST = attr__ATTRIBUTE_LAST
+end
+
+module Ada__containers__formal_vectors__extended_index_helper
+  use import int.Int
+ use import "_gnatprove_standard".Main
+  use Ada__containers__count_type
+  use import Ada__containers__formal_vectors__extended_index
+
+  function extended_index__to_index "inline" (i : int) : int =
+      i - attr__ATTRIBUTE_FIRST
+
+  function extended_index__of_index "inline" (i : int) : int =
+      i + attr__ATTRIBUTE_FIRST
+
+end
+
+module Ada__containers__formal_vectors__no_index
+ use import "int".Int
+ use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__extended_index
+
+  function no_index : extended_index
+
+  axiom no_index__def:
+    to_int (no_index) = attr__ATTRIBUTE_FIRST
+end
+
+module  Ada__containers__formal_vectors__vector
+  use import int.Int
+ use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__index_type_helper
+
+  type vector
+
+  function rec__capacity vector : Ada__containers__count_type.count_type
+
+  function capacity "inline" (co : vector) : int =
+          Ada__containers__count_type.to_int (rec__capacity co)
+
+(****** Should be enforced by typing, to do: modify ads file accordingly *******)
+  axiom capacity_range:
+    forall co : vector [rec__capacity co].
+      0 <= capacity co <= index_type_length
+
+  function to_base "inline" (co : vector) : vector = co
+
+  function of_base "inline" (co : vector) : vector = co
+end
+
+module Ada__containers__formal_vectors__length
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use Ada__containers__count_type
+  use import Ada__containers__formal_vectors__vector
+
+  function length (co : vector) : Ada__containers__count_type.count_type
+
+  function length_ "inline" (co : vector) : int =
+    Ada__containers__count_type.to_int (length co)
+
+  axiom length_range:
+    forall co:vector [length co]. 0 <= length_ co <= capacity co
+
+  val length (co : vector) :  Ada__containers__count_type.count_type
+     ensures { result = length co }
+end
+
+module Ada__containers__formal_vectors__cursor
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+
+  type cursor
+end
+
+module Ada__containers__formal_vectors__to_index
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__extended_index
+  use import Ada__containers__formal_vectors__extended_index_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+
+  function real_to_index vector cursor : extended_index
+
+  function to_index (cu : cursor) : extended_index
+
+  (* change to_index so that it takes a container as an argument *)
+  axiom to_index_def:
+        forall co : vector, cu : cursor [real_to_index co cu, to_index cu].
+          extended_index__to_index (to_int (real_to_index co cu)) > 0 -> real_to_index co cu = to_index cu
+
+  val to_index (cu : cursor) : extended_index
+      ensures { result = to_index cu }
+
+  function to_index_ "inline" (co : vector) (cu : cursor) : int = extended_index__to_index (to_int (real_to_index co cu))
+
+  function to_cursor_ vector int : cursor
+
+  axiom to_index_range:
+    forall cu : cursor, v : vector.
+        0 <= to_index_ v cu <= length_ (v)
+
+  axiom to_index_to_cursor:
+   forall co : vector, i :int [to_index_ co (to_cursor_ co i)]. 0 < i <= length_ co ->
+              to_index_ co (to_cursor_ co i) = i
+
+  axiom to_cursor_to_index:
+    forall co : vector, cu:cursor [to_index_ co cu].
+          to_index_ co cu > 0 -> to_cursor_ co (to_index_ co cu) = cu
+end
+
+module Ada__containers__formal_vectors__to_cursor
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__extended_index_helper
+  use import Ada__containers__formal_vectors__vector
+
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+
+  function to_cursor (co : vector) (i : int) : cursor =
+        to_cursor_ co (extended_index__to_index i)
+
+  val to_cursor (co : vector) (i : int) : cursor
+      ensures { result = to_cursor_ co (extended_index__to_index i) }
+end
+
+module Ada__containers__formal_vectors__first_index
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__index_type
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__vector
+
+  function first_index (co:vector) : Ada__containers__formal_vectors__index_type.index_type
+
+  axiom first_index__def :
+  forall  co:vector [first_index co].
+	Ada__containers__formal_vectors__index_type.to_int (first_index co) = index_type__of_index 1
+
+  val first_index (co:vector) : Ada__containers__formal_vectors__index_type.index_type
+      ensures { Ada__containers__formal_vectors__index_type.to_int (result) = index_type__of_index 1 }
+end
+
+module Ada__containers__formal_vectors__last_index
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__extended_index
+  use import Ada__containers__formal_vectors__extended_index_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+
+  function last_index (co:vector) : extended_index
+
+  axiom last_index__def :
+  forall  co:vector [last_index co].
+	to_int (last_index co) = extended_index__of_index (length_ co)
+
+  val last_index (co:vector) : extended_index
+      ensures { to_int (result) = extended_index__of_index (length_ co) }
+end
+
+module Ada__containers__formal_vectors__no_element
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+
+  function no_element : cursor
+
+  axiom to_index_no_element:
+    forall v : vector.  to_index_ v no_element = 0
+
+  axiom to_cursor_no_element:
+    forall v : vector.  to_cursor_ v 0 = no_element
+end
+
+module Ada__containers__formal_vectors__empty_vector
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+
+  function empty_vector : vector
+
+  axiom Empty_is_empty: length_ empty_vector = 0
+end
+
+module Ada__containers__formal_vectors__is_empty
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+
+  function is_empty vector : bool
+
+  axiom is_empty:
+    forall co:vector [is_empty (co)].
+          is_empty (co) = True <-> length_ co = 0
+
+  val is_empty (co:vector) : bool
+     ensures  { result = True <-> length_ co = 0 }
+end
+
+module Ada__containers__formal_vectors__previous
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+
+  function previous vector cursor : cursor
+
+  axiom previous_in:
+    forall co:vector, cu:cursor [previous co cu].
+	(to_index_ co cu > 1 \/ to_index_ co (previous co cu) > 0) ->
+	to_index_ co (previous co cu) = to_index_ co cu - 1
+
+  axiom previous_ext:
+    forall co:vector, cu:cursor [previous co cu].
+        (to_index_ co cu = 1 \/ cu = no_element) -> previous co cu = no_element
+
+  val previous (co:vector) (cu:cursor) : cursor
+     requires { cu = no_element \/ to_index_ co cu > 0 }
+     ensures  { result = previous co cu }
+end
+
+module Ada__containers__formal_vectors__previous__2
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+  use import Ada__containers__formal_vectors__previous
+
+  val previous__2 (co:vector) (cu:ref cursor) : unit
+     requires { !cu = no_element \/ to_index_ co !cu > 0 }
+     writes     { cu }
+     reads      { cu }
+     ensures  { !cu = previous co (old !cu) }
+end
+
+module Ada__containers__formal_vectors__next
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+
+  function next vector cursor : cursor
+
+  axiom next_in:
+    forall co:vector, cu:cursor [next co cu].
+	(length_ co > to_index_ co cu > 0 \/ to_index_ co (next co cu) > 0) ->
+	to_index_ co (next co cu) = to_index_ co cu + 1
+
+  axiom next_ext:
+    forall co:vector, cu:cursor [next co cu].
+        (to_index_ co cu = length_ co \/ cu = no_element) -> next co cu = no_element
+
+  val next (co:vector) (cu:cursor) : cursor
+     requires { cu = no_element \/ to_index_ co cu > 0 }
+     ensures  { result = next co cu }
+end
+
+module Ada__containers__formal_vectors__next__2
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+  use import Ada__containers__formal_vectors__next
+
+  val next__2 (co:vector) (cu:ref cursor) : unit
+     requires { !cu = no_element \/ to_index_ co !cu > 0 }
+     writes     { cu }
+     reads      { cu }
+     ensures  { !cu = next co (old !cu) }
+end
+
+module Ada__containers__formal_vectors__last
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+
+  function last vector : cursor
+
+  axiom last_empty:
+    forall co:vector [last co]. length_ co = 0 <-> last co = no_element
+
+  axiom last_gen:
+    forall co:vector [last co]. length_ co = to_index_ co (last co)
+
+  val last (co:vector) : cursor
+     ensures  { result = last co }
+end
+
+module Ada__containers__formal_vectors__first
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+
+  function first vector : cursor
+
+  axiom first_empty:
+    forall co:vector [first co]. length_ co = 0 <-> first co = no_element
+
+  axiom first_gen:
+    forall co:vector [first co]. length_ co > 0 -> to_index_ co (first co) = 1
+
+  val first (co:vector) : cursor
+     ensures  { result = first co }
+end
+
+module Ada__containers__formal_vectors__element
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__length
+
+  function element_ vector int : Ada__containers__formal_vectors__element_type.element_type
+
+  function element "inline" (co:vector) (i : int) : Ada__containers__formal_vectors__element_type.element_type = element_ co (index_type__to_index i)
+
+  val element (co:vector) (i : int) : Ada__containers__formal_vectors__element_type.element_type
+    requires { 0 < (index_type__to_index i) <= length_ co }
+    ensures   { result = element_ co (index_type__to_index i) }
+end
+
+module Ada__containers__formal_vectors__element__2
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__element
+
+  function element__2 (v : vector) (cu :cursor) : Ada__containers__formal_vectors__element_type.element_type =
+    element_ v (to_index_ v cu)
+
+  val element__2 (co:vector) (cu:cursor) : Ada__containers__formal_vectors__element_type.element_type
+     requires { 0 < to_index_ co cu <= length_ (co) }
+     ensures  { result = element_ co (to_index_ co cu) }
+end
+
+module Ada__containers__formal_vectors__first_element
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__element
+
+  function first_element (co:vector) : Ada__containers__formal_vectors__element_type.element_type = element_ co 1
+
+  val first_element (co:vector) :  Ada__containers__formal_vectors__element_type.element_type
+    requires { length_ co > 0 }
+    ensures { result = element_ co 1 }
+end
+
+module Ada__containers__formal_vectors__last_element
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__element
+
+  function last_element (co:vector) : Ada__containers__formal_vectors__element_type.element_type = element_ co (length_ co)
+
+  val lat_element (co:vector) :  Ada__containers__formal_vectors__element_type.element_type
+    requires { length_ co > 0 }
+    ensures { result = element_ co (length_ co) }
+end
+
+module Ada__containers__formal_vectors__find_index
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__oeq
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__extended_index
+  use import Ada__containers__formal_vectors__extended_index_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__element
+
+  function find_index_ vector Ada__containers__formal_vectors__element_type.base_type int : extended_index
+
+  function find_index "inline" (co:vector) (e:Ada__containers__formal_vectors__element_type.base_type) (i : int) : extended_index = find_index_ co e (index_type__to_index i)
+
+  function find_ "inline" (co:vector) (e:Ada__containers__formal_vectors__element_type.base_type) (i:int) : int =
+    extended_index__to_index (to_int (find_index_ co e i))
+
+  axiom find_range:
+    forall v:vector, e:Ada__containers__formal_vectors__element_type.base_type, n:int [find_index_ v e n].
+      n <= find_ v e n <= length_ v \/ find_ v e n = 0
+
+  axiom find_no:
+    forall v:vector, e:Ada__containers__formal_vectors__element_type.base_type, n:int [find_index_ v e n].
+      find_ v e n = 0 ->
+      forall i : int [element_ v i]. n <= i <= length_ v /\ i > 0 ->
+          Ada__containers__formal_vectors__oeq.oeq (Ada__containers__formal_vectors__element_type.to_base (element_ v i)) e = False
+
+  axiom find_ex:
+    forall v:vector, e:Ada__containers__formal_vectors__element_type.base_type, n:int [find_index_ v e n].
+      find_ v e n > 0 -> Ada__containers__formal_vectors__oeq.oeq (Ada__containers__formal_vectors__element_type.to_base (element_ v (find_ v e n))) e = True
+
+  axiom find_oth:
+    forall v:vector, e:Ada__containers__formal_vectors__element_type.base_type, n:int [find_index_ v e n].
+      find_ v e n > 0 ->
+      forall i : int [element_ v i]. n <= i < find_ v e n /\ i > 0 ->
+              Ada__containers__formal_vectors__oeq.oeq (Ada__containers__formal_vectors__element_type.to_base (element_ v i)) e = False
+
+  val find_index (co:vector)(e:Ada__containers__formal_vectors__element_type.base_type)(i:int) : extended_index
+     ensures { result = find_index co e i }
+
+end
+
+module Ada__containers__formal_vectors__find
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__oeq
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+  use import Ada__containers__formal_vectors__find_index
+
+  function find (co:vector) (e:Ada__containers__formal_vectors__element_type.base_type) (cu:cursor) : cursor
+  axiom find__def:
+    forall co:vector, e:Ada__containers__formal_vectors__element_type.base_type, cu : cursor [find co e cu].
+    to_index_ co (find co e cu) = find_ co e (to_index_ co cu)
+
+  val find (co:vector) (e:Ada__containers__formal_vectors__element_type.base_type) (cu:cursor) : cursor
+    requires { 0 <= to_index_ co cu <= length_ co \/ cu = no_element }
+    ensures  { find_ co e (to_index_ co cu) = to_index_ co result }
+ end
+
+module Ada__containers__formal_vectors__reverse_find_index
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__oeq
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__extended_index
+  use import Ada__containers__formal_vectors__extended_index_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__element
+
+  function reverse_find_index_ vector Ada__containers__formal_vectors__element_type.base_type int : extended_index
+
+  function reverse_find_ "inline" (co : vector) (e :Ada__containers__formal_vectors__element_type.base_type) (i : int) : int =
+    extended_index__to_index (to_int (reverse_find_index_ co e i))
+
+  axiom reverse_find_range:
+    forall v:vector, e:Ada__containers__formal_vectors__element_type.base_type, n:int [reverse_find_index_ v e n].
+      0 < reverse_find_ v e n <= n /\  reverse_find_ v e n <= length_ v \/ reverse_find_ v e n = 0
+
+  axiom reverse_find_no:
+    forall v:vector, e:Ada__containers__formal_vectors__element_type.base_type, n:int [reverse_find_index_ v e n].
+      reverse_find_ v e n = 0 ->
+      forall i : int [element_ v i]. 0 < i <= n /\ i <= length_ v -> Ada__containers__formal_vectors__oeq.oeq (Ada__containers__formal_vectors__element_type.to_base (element_ v i)) e = False
+
+  axiom reverse_find_ex:
+    forall v:vector, e:Ada__containers__formal_vectors__element_type.base_type, n:int [reverse_find_index_ v e n].
+      reverse_find_ v e n > 0 -> Ada__containers__formal_vectors__oeq.oeq (Ada__containers__formal_vectors__element_type.to_base (element_ v (reverse_find_ v e n))) e = True
+
+  axiom reverse_find_oth:
+    forall v:vector, e:Ada__containers__formal_vectors__element_type.base_type, n:int [reverse_find_index_ v e n].
+      reverse_find_ v e n > 0 ->
+      forall i : int [element_ v i]. reverse_find_ v e n < i <= n /\ i <= length_ v -> Ada__containers__formal_vectors__oeq.oeq (Ada__containers__formal_vectors__element_type.to_base (element_ v i)) e = False
+
+  function reverse_find_index (co:vector) (e:Ada__containers__formal_vectors__element_type.base_type) (i:int) : extended_index =
+    if extended_index__to_index (i) = 0 then
+	reverse_find_index_ co e (length_ co)
+    else
+	reverse_find_index_ co e (index_type__to_index i)
+
+  val reverse_find_index (co:vector) (e:Ada__containers__formal_vectors__element_type.base_type) (i:int) : extended_index
+  ensures {result = reverse_find_index co e i }
+end
+
+module Ada__containers__formal_vectors__reverse_find
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__extended_index
+  use import Ada__containers__formal_vectors__extended_index_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+  use import Ada__containers__formal_vectors__reverse_find_index
+
+  function reverse_find (co:vector) (e:Ada__containers__formal_vectors__element_type.base_type) (cu:cursor) : cursor
+
+  axiom reverse_find__def:
+    forall co:vector, e:Ada__containers__formal_vectors__element_type.base_type, cu:cursor [reverse_find co e cu].
+    if cu = no_element then
+	to_index_ co (reverse_find co e cu) = (reverse_find_ co e (length_ co))
+    else
+	to_index_ co (reverse_find co e cu) =  (reverse_find_ co e (to_index_ co cu))
+
+  val reverse_find__pre (co:vector) (e:Ada__containers__formal_vectors__element_type.base_type) (cu:cursor) : cursor
+     requires { cu = no_element \/ 0 < to_index_ co cu }
+     ensures   {    if cu = no_element then to_index_ co result = reverse_find_ co e (length_ co)
+                              else to_index_ co result = reverse_find_ co e (to_index_ co cu) }
+end
+
+module Ada__containers__formal_vectors__Oeq__2
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__oeq
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__element
+
+  function oeq__2 (co1 : vector) (co2 : vector) : bool
+
+  axiom oeq__2__def:
+   forall co1 co2 : vector [oeq__2 co1 co2]. oeq__2 co1 co2 = True <-> (length_ co1 = length_ co2 /\
+     (forall i:int [element_ co1 i |  element_ co2 i].
+      0 < i <= length_ co1 ->
+        Ada__containers__formal_vectors__oeq.oeq (Ada__containers__formal_vectors__element_type.to_base (element_ co1 i)) (Ada__containers__formal_vectors__element_type.to_base (element_ co2 i)) = True))
+
+  val oeq__2 (co1:vector) (co2:vector) : bool
+     ensures  { result  = oeq__2 co1 co2 }
+end
+
+module Ada__containers__formal_vectors__strict_equal
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__element
+
+(* Should be added to Vector.ads *)
+  function strict_equal (co1 : vector) (co2 : vector) : bool
+
+  axiom strict_equal__def :
+     forall co1 co2 : vector [strict_equal co1 co2].
+    strict_equal co1 co2 = True <-> (length_ co1 = length_ co2 /\
+     (forall i:int [element_ co1 i |  element_ co2 i].
+      0 < i <= length_ co1 ->
+       Ada__containers__formal_vectors__element_type.to_base (element_ co1 i) = Ada__containers__formal_vectors__element_type.to_base (element_ co2 i)) /\
+     (forall cu:cursor [real_to_index co1 cu |  real_to_index co2 cu].
+       to_index_ co1 cu = to_index_ co2 cu))
+
+  val strict_equal__program (co1:vector) (co2:vector) : bool
+     ensures  { result  = strict_equal co1 co2 }
+end
+
+module Ada__containers__formal_vectors__replace_element
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__element
+
+  predicate replace_element (co1 : vector) (i : int)
+        (e : Ada__containers__formal_vectors__element_type.base_type) (co2 : vector) =
+    0 < i <= length_ co1 /\length_ co1 = length_ co2 /\
+      Ada__containers__formal_vectors__element_type.to_base (element_ co2 i) = e /\
+       (forall j:int [element_ co2 j | element_ co1 j].
+          0 < j <= length_ co1 ->  i <> j ->  element_ co2 j = element_ co1 j) /\
+       (forall cu:cursor[real_to_index co1 cu | real_to_index co2 cu].  to_index_ co1 cu = to_index_ co2 cu)
+
+  val replace_element (co:ref vector) (i:int) (e:Ada__containers__formal_vectors__element_type.base_type): unit
+    requires { 0 < index_type__to_index i <= length_ !co }
+     writes     { co }
+     reads      { co }
+     ensures { replace_element (old !co) ( index_type__to_index i) e !co }
+end
+
+module Ada__containers__formal_vectors__replace_element__2
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__replace_element
+
+  val replace_element__2 (co:ref vector) (cu : cursor) (e:Ada__containers__formal_vectors__element_type.base_type): unit
+    requires { 0 < to_index_ !co cu <= length_ !co }
+     writes     { co }
+     reads      { co }
+     ensures { replace_element (old !co) (to_index_ !co cu) e !co }
+end
+
+module Ada__containers__formal_vectors__left
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+  use import Ada__containers__formal_vectors__element
+
+  function left_ vector int : vector
+
+  axiom left_lgth:
+    forall co:vector, i:int [left_ co i].
+       0 < i <= length_ co + 1 -> length_ (left_ co i) = i - 1
+
+  axiom left_elt:
+    forall co:vector, i j:int [left_ co i, element_ co j|element_ (left_ co i) j].
+       0 < i <= length_ co + 1 -> 0 < j < i -> element_ co j = element_ (left_ co i) j
+
+  axiom left_curs:
+    forall co:vector, i :int, cu : cursor [left_ co i, real_to_index co cu|real_to_index (left_ co i) cu].
+      0 < i <= length_ co + 1 ->  (to_index_ co cu < i \/ to_index_ (left_ co i) cu > 0) -> to_index_ co cu = to_index_ (left_ co i) cu
+
+  axiom left_curs_out:
+    forall co:vector, i :int, cu : cursor [left_ co i, real_to_index co cu|real_to_index (left_ co i) cu].
+       0 < i <= length_ co + 1 -> (to_index_ co cu >= i) -> to_index_ (left_ co i) cu = 0
+
+  axiom left_eq:
+    forall co:vector, i:int [left_ co i].
+      i = length_ co + 1 -> left_ co i = co
+
+  (* Should be changed to take index as argument rather than cursors *)
+  function left (co:vector) (cu : cursor) : vector =
+     let i = if cu = no_element then length_ co + 1 else to_index_ co cu in
+       left_ co i
+
+  val left (co:vector) (cu : cursor) : vector
+     requires { cu = no_element \/ to_index_ co cu > 0 }
+     ensures   { let i = if cu = no_element then length_ co + 1 else to_index_ co cu in
+                            result = left_ co i }
+end
+
+module Ada__containers__formal_vectors__right
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+  use import Ada__containers__formal_vectors__element
+
+  function right_ vector int : vector
+
+  axiom right_lgth:
+    forall co:vector, i:int [right_ co i].
+      0 < i <= length_ co + 1 -> length_ (right_ co i) = length_ co - i + 1
+
+  axiom right_elt1:
+    forall co:vector, i j:int [right_ co i, element_ co j].
+      0 < i <= length_ co + 1 ->  i <= j <= length_ co -> element_ co j = element_ (right_ co i) (j - i + 1)
+
+  axiom right_elt2:
+    forall co:vector, i j:int [element_ (right_ co i) j].
+      0 < i <= length_ co + 1 ->  0 < j <= length_ co - i + 1 -> element_ co (j + i - 1) = element_ (right_ co i) j
+
+  function right (co:vector) (cu : cursor) : vector =
+     let i = if cu = no_element then length_ co + 1 else to_index_ co cu in
+       right_ co i
+
+  val right (co:vector) (cu : cursor) : vector
+     requires { cu = no_element \/ to_index_ co cu > 0 }
+     ensures   { let i = if cu = no_element then length_ co + 1 else to_index_ co cu in
+                            result = right_ co i }
+end
+
+module Ada__containers__formal_vectors__to_vector
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__element
+
+  function to_vector (e:Ada__containers__formal_vectors__element_type.base_type) (lgth:int) : vector
+
+  axiom to_vector_def:
+    forall e:Ada__containers__formal_vectors__element_type.base_type, lgth:int [to_vector e lgth].
+    index_type_length >= lgth >= 0 -> length_ (to_vector e lgth) = lgth /\
+    forall i:int [element_ (to_vector e lgth) i].
+      0 < i <= lgth -> Ada__containers__formal_vectors__element_type.to_base (element_ (to_vector e lgth) i) = e
+
+  val to_vector (e:Ada__containers__formal_vectors__element_type.base_type) (lgth:int) : vector
+    requires { index_type_length >= lgth >= 0 }
+    ensures { result = to_vector e lgth /\ length_ result = lgth /\
+                            forall i:int [element_ result i]. 0 < i <= lgth ->
+                                   Ada__containers__formal_vectors__element_type.to_base (element_ (result) i) = e }
+end
+
+module Ada__containers__formal_vectors__insert
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__extended_index_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__element
+
+  predicate  insert_vect vector int vector vector
+
+  axiom insert_vect_length_:
+    forall li1 li2 nv : vector, i : int [insert_vect li1 i nv li2].
+	insert_vect li1 i nv li2 -> length_ li2 = length_ li1 + length_ nv
+
+  axiom insert_vect_capacity:
+    forall co1 co2 nv : vector, i : int [insert_vect co1 i nv co2].
+      insert_vect co1 i nv co2 -> capacity co1 = capacity co2
+
+  axiom insert_vect_element1:
+    forall li1 li2 nv : vector, i j : int [insert_vect li1 i nv li2, element_ li1 j | insert_vect li1 i nv li2, element_ li2 j].
+	insert_vect li1 i nv li2 -> 0 < j < i -> element_ li1 j = element_ li2 j
+
+  axiom insert_vect_element2:
+    forall li1 li2 nv : vector, i j : int [insert_vect li1 i nv li2, element_ nv j].
+	insert_vect li1 i nv li2 -> 0 < j <= length_ nv -> element_ nv j = element_ li2 (i + j - 1)
+
+  axiom insert_vect_element2bis:
+    forall li1 li2 nv : vector, i j : int [insert_vect li1 i nv li2, element_ li2 j].
+	insert_vect li1 i nv li2 -> i <= j <= i + length_ nv - 1 -> element_ nv (j - i + 1) = element_ li2 j
+
+  axiom insert_vect_element3:
+    forall li1 li2 nv : vector, i j : int [insert_vect li1 i nv li2, element_ li1 j].
+	insert_vect li1 i nv li2 -> i <= j <= length_ li1 -> element_ li1 j = element_ li2 (j + length_ nv)
+
+  axiom insert_vect_element3bis:
+    forall li1 li2 nv : vector, i j : int [insert_vect li1 i nv li2, element_ li2 j].
+	insert_vect li1 i nv li2 -> i + length_ nv <= j <= length_ li2 -> element_ li1 (j - length_ nv) = element_ li2 j
+
+  axiom insert_vect_curs:
+    forall co1 co2 nv: vector, i : int, cu : cursor
+   [insert_vect co1 i nv co2, real_to_index co1 cu | insert_vect co1 i nv co2, real_to_index co2 cu ].
+    insert_vect co1 i nv co2 -> (0 < to_index_ co1 cu < i \/ 0 < to_index_ co2 cu < i) ->
+    to_index_ co1 cu = to_index_ co2 cu
+
+  val insert (co : ref vector) (i:int) (new_item : vector) : unit
+     requires { 0 < extended_index__to_index i <= length_ !co + 1 /\ length_ !co + length_ new_item <= capacity !co }
+     writes     { co }
+     reads      { co }
+     ensures  { insert_vect (old !co) (extended_index__to_index i) new_item !co }
+end
+
+module Ada__containers__formal_vectors__insert__2
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+  use import Ada__containers__formal_vectors__insert
+
+  val insert__2 (co :ref vector) (cu : cursor) (new_item : vector) : unit
+     requires { (to_index_ !co cu > 0 \/ cu = no_element) /\ length_ !co + length_ new_item <= capacity !co }
+     writes     { co }
+     reads      { co }
+     ensures { if cu = no_element then insert_vect (old !co) (length_ !co + 1) new_item! co
+                             else insert_vect (old !co) (to_index_ (old !co) cu) new_item !co }
+end
+
+module Ada__containers__formal_vectors__insert__3
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+  use import Ada__containers__formal_vectors__insert
+
+  val insert__3 (co :ref vector) (cu : cursor) (new_item : vector) (p : ref cursor): unit
+     requires { (to_index_ !co cu > 0 \/ cu = no_element) /\ length_ !co + length_ new_item <= capacity !co }
+     writes     { co, p }
+     reads      { co }
+     ensures { let i = if cu = no_element then length_ !co + 1 else to_index_ (old !co) cu in
+                                   i = to_index_ !co !p  /\ insert_vect (old !co) i new_item !co }
+end
+
+module Ada__containers__formal_vectors__insert__4
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__extended_index_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__to_vector
+  use import Ada__containers__formal_vectors__insert
+
+  val insert__4 (co :ref vector) (i:int) (e : Ada__containers__formal_vectors__element_type.base_type) (c:int) : unit
+     requires {0 < extended_index__to_index i <= length_ !co + 1 /\   length_ !co + c <= capacity !co }
+     writes     { co }
+     reads      { co }
+     ensures { insert_vect (old !co) (extended_index__to_index i) (to_vector e c) !co }
+end
+
+module Ada__containers__formal_vectors__insert__5
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+  use import Ada__containers__formal_vectors__to_vector
+  use import Ada__containers__formal_vectors__insert
+
+  val insert__5 (co : ref vector) (cu : cursor) (e : Ada__containers__formal_vectors__element_type.base_type)
+	(c:int) : unit
+     requires { (to_index_ !co cu > 0 \/ cu = no_element)  /\  length_ !co + c <= capacity !co }
+     writes     { co }
+     reads      { co }
+     ensures { let i = if cu = no_element then length_ !co + 1 else to_index_ (old !co) cu in
+                               insert_vect (old !co) i (to_vector e c) !co }
+end
+
+module Ada__containers__formal_vectors__insert__6
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+  use import Ada__containers__formal_vectors__to_vector
+  use import Ada__containers__formal_vectors__insert
+
+  val insert__6 (co :ref vector) (cu : cursor) (e : Ada__containers__formal_vectors__element_type.base_type) (p : ref cursor) (c:int) : unit
+     requires { (to_index_ !co cu > 0 \/ cu = no_element)  /\  length_ !co + c <= capacity !co }
+     writes     { co, p }
+     reads      { co }
+     ensures { let i = if cu = no_element then length_ !co + 1 else to_index_ (old !co) cu in
+                               to_index_ !co !p = i /\ insert_vect (old! co) i (to_vector e c) !co }
+ end
+
+module Ada__containers__formal_vectors__prepend
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__insert
+
+  val prepend (co : ref vector) (nv:vector) : unit
+     requires { length_ !co + length_ nv <= capacity !co }
+     writes     { co }
+     reads      { co }
+     ensures { insert_vect (old !co) 1 nv !co }
+end
+
+module Ada__containers__formal_vectors__prepend__2
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__to_vector
+  use import Ada__containers__formal_vectors__insert
+
+  val prepend__2 (co:ref vector) (e:Ada__containers__formal_vectors__element_type.base_type)
+                                             (c : int) : unit
+     requires { length_ !co + c <= capacity !co }
+     writes     { co }
+     reads      { co }
+     ensures { insert_vect (old !co) 1 (to_vector e c) !co }
+end
+
+module Ada__containers__formal_vectors__append
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__insert
+
+  val append (co : ref vector) (nv:vector) : unit
+     requires { length_ !co + length_ nv <= capacity !co }
+     writes     { co }
+     reads      { co }
+     ensures { insert_vect (old !co) (length_ (old !co) + 1) nv !co }
+end
+
+module Ada__containers__formal_vectors__append__2
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__to_vector
+  use import Ada__containers__formal_vectors__insert
+
+  val append__2 (co:ref vector) (e:Ada__containers__formal_vectors__element_type.base_type)
+                                             (c : int) : unit
+     requires { length_ !co + c <= capacity !co }
+     writes     { co }
+     reads      { co }
+     ensures { insert_vect (old !co)  (length_ (old !co) + 1) (to_vector e c) !co }
+end
+
+module Ada__containers__formal_vectors__Oconcat
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__element
+
+  predicate concat vector vector vector
+
+  axiom concat_length_:
+    forall v1 v2 r : vector [concat v1 v2 r].
+      concat v1 v2 r -> length_ r = length_ v1 + length_ v2
+
+  axiom concat_element1:
+    forall v1 v2 r : vector, i : int [concat v1 v2 r, element_ r i | concat v1 v2 r, element_ v1 i].
+     concat v1 v2 r -> 0 < i <= length_ v1 -> element_ r i = element_ v1 i
+
+  axiom concat_element2:
+    forall v1 v2 r : vector, i : int [concat v1 v2 r | concat v1 v2 r, element_ v2 i].
+     concat v1 v2 r -> 0 < i <= length_ v2 -> element_ r (length_ v1 + i) = element_ v2 i
+
+  axiom concat_element2bis:
+    forall v1 v2 r : vector, i : int [concat v1 v2 r | concat v1 v2 r, element_ r i].
+     concat v1 v2 r -> length_ v1 < i <= length_ r -> element_ r i = element_ v2 (i - length_ v1)
+
+  function oconcat vector vector : vector
+
+  axiom oconcat_def:
+    forall v1 v2 : vector [oconcat v1 v2].
+    length_ v1 + length_ v2 <= index_type_length -> concat v1 v2 (oconcat v1 v2)
+
+  val oconcat (co1:vector) (co2:vector) : vector
+    requires { length_ co1 + length_ co2 <= index_type_length }
+    ensures   { result = oconcat co1 co2 }
+end
+
+module Ada__containers__formal_vectors__Oconcat__2
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__to_vector
+  use import Ada__containers__formal_vectors__Oconcat
+
+  function oconcat__2 vector Ada__containers__formal_vectors__element_type.base_type : vector
+
+  axiom oconcat__2_def:
+    forall v : vector, e : Ada__containers__formal_vectors__element_type.base_type [oconcat__2 v e].
+    length_ v < index_type_length -> concat v (to_vector e 1) (oconcat__2 v e)
+
+  val oconcat__2 (co:vector) (e : Ada__containers__formal_vectors__element_type.base_type) : vector
+    requires { length_ co < index_type_length }
+    ensures   { result = oconcat__2 co e }
+end
+
+module Ada__containers__formal_vectors__Oconcat__3
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__to_vector
+  use import Ada__containers__formal_vectors__Oconcat
+
+  function oconcat__3 Ada__containers__formal_vectors__element_type.base_type vector : vector
+
+  axiom oconcat__3_def:
+    forall v : vector, e : Ada__containers__formal_vectors__element_type.base_type [oconcat__3 e v].
+    length_ v < index_type_length -> concat (to_vector e 1) v (oconcat__3 e v)
+
+  val oconcat__3 (e : Ada__containers__formal_vectors__element_type.base_type) (co:vector) : vector
+    requires { length_ co < index_type_length }
+    ensures   { result = oconcat__3 e co }
+end
+
+module Ada__containers__formal_vectors__Oconcat__4
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__element_type
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__element
+
+  function oconcat__4 Ada__containers__formal_vectors__element_type.base_type Ada__containers__formal_vectors__element_type.base_type : vector
+
+  axiom oconcat__4__logic_def:
+    forall e1 e2 : Ada__containers__formal_vectors__element_type.base_type [oconcat__4 e1 e2].
+    index_type_length >= 2 -> length_ (oconcat__4 e1 e2) = 2 /\
+    Ada__containers__formal_vectors__element_type.to_base (element_ (oconcat__4 e1 e2) 1) = e1 /\
+    Ada__containers__formal_vectors__element_type.to_base (element_ (oconcat__4 e1 e2) 2) = e2
+
+  val oconcat__4 (e1 e2 : Ada__containers__formal_vectors__element_type.base_type) : vector
+    requires { 2 <= index_type_length }
+    ensures   { result = oconcat__4 e1 e2 }
+end
+
+module Ada__containers__formal_vectors__swap
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__element
+
+  predicate swap vector int int vector
+
+  axiom swap_lgth_cap:
+    forall v1 v2 : vector, i1 i2 : int [swap v1 i1 i2 v2 ].
+      swap v1 i1 i2 v2 -> length v1 = length v2 /\ rec__capacity v1 = rec__capacity v2
+
+  axiom swap_curs:
+    forall v1 v2 : vector, i1 i2 : int, cu : cursor [swap v1 i1 i2 v2, real_to_index v1 cu|swap v1 i1 i2 v2, real_to_index v2 cu ].
+      swap v1 i1 i2 v2 -> real_to_index v1 cu = real_to_index v2 cu
+
+  axiom swap_elt:
+    forall v1 v2 : vector, i1 i2 : int, i:int [swap v1 i1 i2 v2, element_ v1 i|swap v1 i1 i2 v2, element_ v2 i ].
+      swap v1 i1 i2 v2 -> 0 < i <= length_ v1 -> i <> i1 /\ i <> i2 -> element_ v1 i = element_ v2 i
+
+  axiom swap_range:
+    forall v1 v2 : vector, i1 i2 : int [swap v1 i1 i2 v2 ].
+      swap v1 i1 i2 v2 -> 0 < i1 <= length_ v1 /\ element_ v1 i1 = element_ v2 i2 /\
+					     0 < i2 <= length_ v1 /\ element_ v1 i2 = element_ v2 i1
+
+  val swap (co: ref vector) (i1 i2 : int) : unit
+    requires { 0 < index_type__to_index i1 <= length_ !co /\ 0 < index_type__to_index i2 <= length_ !co }
+     writes     { co }
+     reads      { co }
+     ensures { (i1 = i2 /\ !co = (old !co)) \/
+                         (i1 <> i2 /\ swap (old !co) (index_type__to_index i1) (index_type__to_index i2) !co) }
+end
+
+module Ada__containers__formal_vectors__swap__2
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__swap
+
+  val swap__2 (co:ref vector) (cu1 cu2 : cursor) : unit
+    requires { 0 < to_index_ !co cu1 /\ 0 < to_index_ !co cu2 }
+     ensures { (cu1 = cu2 /\ !co = (old !co)) \/
+                         (cu1 <> cu2 /\ swap (old !co) (to_index_ (old !co) cu1) (to_index_ (old !co) cu2) !co) }
+end
+
+module Ada__containers__formal_vectors__delete
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__extended_index_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__element
+
+  predicate delete_ vector int int vector
+
+  axiom delete_range:
+    forall co1 co2 : vector, i l : int [delete_ co1 i l co2].
+      delete_ co1 i l co2 -> 0 < i <= length_ co1
+
+  axiom delete_length_:
+    forall co1 co2 : vector, i l : int [delete_ co1 i l co2].
+      delete_ co1 i l co2 -> length_ co1 = length_ co2 + l
+
+  axiom delete_capacity:
+    forall co1 co2 : vector, i l : int [delete_ co1 i l co2].
+      delete_ co1 i l co2 -> capacity co1 = capacity co2
+
+  axiom delete_elmt1 :
+    forall li1 li2 : vector, i l j : int [delete_ li1 i l li2, element_ li1 j |  delete_ li1 i l li2, element_ li2 j].
+    delete_ li1 i l li2 -> 0 < j < i -> element_ li1 j = element_ li2 j
+
+  axiom delete_elmt2 :
+    forall li1 li2 : vector, i l j : int [delete_ li1 i l li2, element_ li1 j].
+    delete_ li1 i l li2 -> i + l <= j <= length_ li1 -> element_ li1 j = element_ li2 (j - l)
+
+  axiom delete_elmt2bis :
+    forall li1 li2 : vector, i l j : int [delete_ li1 i l li2, element_ li2 j].
+    delete_ li1 i l li2 -> i <= j <= length_ li2 -> element_ li1 (j+l) = element_ li2 j
+
+  axiom delete_curs:
+    forall co1 co2 : vector, i l : int, cu : cursor [delete_ co1 i l co2, real_to_index co1 cu |
+                                                                                       delete_ co1 i l co2, real_to_index co2 cu ].
+    delete_ co1 i l co2 -> (0 < to_index_ co1 cu < i \/ 0 < to_index_ co2 cu < i) ->
+    to_index_ co1 cu = to_index_ co2 cu
+
+  predicate delete_end vector int vector
+
+  axiom delete_end_range:
+    forall co1 co2 : vector, i : int [delete_end co1 i co2].
+      delete_end co1 i co2 -> 0 < i <= length_ co1
+
+  axiom delete_end_length_:
+    forall co1 co2 : vector, i : int [delete_end co1 i co2].
+      delete_end co1 i co2 -> length_ co2 = i - 1
+
+  axiom delete_end_capacity:
+    forall co1 co2 : vector, i : int [delete_end co1 i co2].
+      delete_end co1 i co2 -> capacity co1 = capacity co2
+
+  axiom delete_end_elmt1 :
+    forall li1 li2 : vector, i j : int [delete_end li1 i li2, element_ li1 j |  delete_end li1 i li2, element_ li2 j].
+    delete_end li1 i li2 -> 0 < j < i -> element_ li1 j = element_ li2 j
+
+  axiom delete_end_curs:
+    forall co1 co2 : vector, i : int, cu : cursor [delete_end co1 i co2, real_to_index co1 cu |
+                                                                                       delete_end co1 i co2, real_to_index co2 cu ].
+    delete_end co1 i co2 -> (0 < to_index_ co1 cu < i \/ 0 < to_index_ co2 cu < i) ->
+    to_index_ co1 cu = to_index_ co2 cu
+
+  predicate delete_mult vector int int vector
+
+  axiom delete_mult_out1 :
+    forall li1 li2 : vector, i : int [delete_mult li1 i 0 li2].
+	delete_mult li1 i 0 li2 -> li1 = li2
+
+  axiom delete_mult_out2 :
+    forall li1 li2 : vector, i c : int [delete_mult li1 i c li2].
+	delete_mult li1 i c li2 -> i > length_ li1 -> li1 = li2
+
+  axiom delete_mult_gen1 :
+    forall li1 li2 : vector, i c : int [delete_mult li1 i c li2].
+	delete_mult li1 i c li2 -> i <=  length_ li1 -> c > length_ li1 - i + 1 -> delete_end li1 i li2
+
+  axiom delete_mult_gen2 :
+    forall li1 li2 : vector, i c : int [delete_mult li1 i c li2].
+	delete_mult li1 i c li2 ->  i <= length_ li1 -> 0 < c <= length_ li1 - i + 1 -> delete_ li1 i c li2
+
+  val delete (co:ref vector) (i : int) (c : int) : unit
+     requires { 0 < extended_index__to_index i <= length_ !co + 1 }
+     writes     { co }
+     reads      { co }
+     ensures { delete_mult (old !co) (extended_index__to_index i) c !co }
+end
+
+module Ada__containers__formal_vectors__delete__2
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+  use import Ada__containers__formal_vectors__no_element
+  use import Ada__containers__formal_vectors__delete
+
+  val delete__2 (co:ref vector) (cu : ref cursor) (c : int) : unit
+     requires { 0 < to_index_ !co !cu <= length_ !co }
+     writes     { co, cu }
+     reads      { co, cu }
+    ensures { delete_mult (old !co) (to_index_ (old !co) (old !cu)) c !co /\ !cu = no_element }
+end
+
+module Ada__containers__formal_vectors__delete_first
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__delete
+
+  val delete_first (co:ref vector) (c : int) : unit
+     writes     { co }
+     reads      { co }
+    ensures { delete_mult (old !co) 1 c !co }
+end
+
+module Ada__containers__formal_vectors__delete_last
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__delete
+
+  val delete_last (co:ref vector) (c : int) : unit
+     writes     { co }
+     reads      { co }
+    ensures { if c >= length_ (old !co) then (length_ !co = 0 /\ capacity !co = capacity (old !co))
+                        else delete_end (old !co) (length_ (old !co) - c + 1) !co }
+end
+
+module Ada__containers__formal_vectors__reverse_elements
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__element
+
+  predicate reverse_elements vector vector
+
+  axiom reverse_elements_length_:
+    forall co1 co2:vector
+      [reverse_elements co1 co2].
+      reverse_elements co1 co2 -> length_ co1 = length_ co2
+
+  axiom reverse_elements_capacity:
+    forall co1 co2:vector
+      [reverse_elements co1 co2].
+      reverse_elements co1 co2 -> capacity co1 = capacity co2
+
+  axiom reverse_elements_element:
+    forall co1 co2:vector, i:int
+      [reverse_elements co1 co2, element_ co2 i].
+      reverse_elements co1 co2 -> 0 < i <= length_ co2 ->
+        element_ co2 i = element_ co1 (length_ co2 - i + 1)
+
+  axiom reverse_elements_element_bis:
+    forall co1 co2:vector, i:int
+      [reverse_elements co1 co2, element_ co1 i].
+      reverse_elements co1 co2 -> 0 < i <= length_ co1 ->
+        element_ co1 i = element_ co2 (length_ co1 - i + 1)
+
+  val reverse_elements (co:ref vector) : unit
+     writes     { co }
+     reads      { co }
+     ensures { reverse_elements !co (old !co) }
+end
+
+module Ada__containers__formal_vectors__has_element
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__cursor
+  use import Ada__containers__formal_vectors__to_index
+
+  function has_element (v : vector) (cu : cursor) : bool =
+    if to_index_ v cu > 0 then True else False
+
+  val has_element (v : vector) (cu : cursor) : bool
+    ensures { if to_index_ v cu > 0 then result = True else result = False }
+end
+
+module Ada__containers__formal_vectors__contains
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use "ada__containers__formal_vectors__args".Ada__containers__formal_vectors__index_type
+  use import Ada__containers__formal_vectors__extended_index
+  use import Ada__containers__formal_vectors__extended_index_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__find_index
+
+  function contains (co : vector) (e : Ada__containers__formal_vectors__element_type.base_type) : bool =
+    if extended_index__to_index (to_int (find_index_ co e 1))  > 0 then True else False
+
+  val contains (co:vector) (e:Ada__containers__formal_vectors__element_type.base_type) : bool
+    ensures { if extended_index__to_index ( to_int (find_index_ co e 1)) > 0 then result = True else result = False }
+end
+
+module Ada__containers__formal_vectors__capacity
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use Ada__containers__count_type
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+
+  function capacity (co : vector) : Ada__containers__count_type.count_type = rec__capacity co
+
+  val capacity (co : vector) : Ada__containers__count_type.count_type
+    ensures { result = rec__capacity co }
+end
+
+module Ada__containers__formal_vectors__reserve_capacity
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+
+  val reserve_capacity (co : ref vector) (c :  int) : unit
+    requires { capacity !co >= c }
+    ensures { !co = old !co }
+end
+
+module Ada__containers__formal_vectors__clear
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+
+  val clear (co:ref vector) : unit
+     writes     { co }
+     ensures { length_ !co = 0 /\ capacity !co = capacity (old !co) }
+end
+
+module Ada__containers__formal_vectors__assign
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__Oeq__2
+
+  val assign (target:ref vector) (source:vector) : unit
+     requires { capacity !target >= length_ source }
+     writes     { target }
+     reads      { target }
+     ensures  { capacity !target = capacity (old !target) /\ oeq__2 !target source = True }
+end
+
+module Ada__containers__formal_vectors__move
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__Oeq__2
+
+  val move (target:ref vector) (source:ref vector) : unit
+     requires { capacity !target >= length_ !source }
+     writes     { target, source }
+     reads      { target, source }
+     ensures  { capacity !target = capacity (old !target) /\ oeq__2 !target (old !source) = True /\
+                           length_ !source = 0 /\  capacity !source = capacity (old !source) }
+end
+
+module Ada__containers__formal_vectors__copy
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__index_type_helper
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__strict_equal
+
+  predicate cap_is_max vector vector int
+
+ axiom cap_is_max_def:
+   forall co1 co2:vector, max:int
+                  [cap_is_max co1 co2 max].
+   if capacity co1 > max then capacity co2 = capacity co1 else capacity co2 = max
+
+  function copy vector int : vector
+
+  axiom copy_def:
+    forall co:vector, cap:int [copy co cap].
+          cap <= index_type_length -> strict_equal co (copy co cap)  = True
+                       /\ cap_is_max co (copy co cap) cap
+
+  val copy (co: vector) (cap:int) : vector
+     requires { cap <= index_type_length }
+     ensures  { strict_equal co (result) = True /\ cap_is_max co result cap  }
+end
+
+module Ada__containers__formal_vectors__set_length
+  use import int.Int
+  use import "_gnatprove_standard".Main
+  use import Ada__containers__formal_vectors__vector
+  use import Ada__containers__formal_vectors__length
+  use import Ada__containers__formal_vectors__delete
+
+  val set_length (co:ref vector) (l:int) : unit
+     requires { l <= length_ !co }
+     writes     { co }
+     reads      { co }
+     ensures  { delete_end (old !co) (l + 1) !co }
+end
