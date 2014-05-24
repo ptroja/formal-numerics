@@ -15,7 +15,7 @@ package Formal.Numerics is
    --pragma inline(Pi);
 
    function e return Float is (Ada.Numerics.e);
-   pragma inline(e);
+   pragma Inline(e);
 
    -- FIXME: rewrite bounds as static invariants (which are not yet supported by GNATprove).
 
