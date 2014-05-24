@@ -14,6 +14,6 @@ TODO
 
 The GNAT GPL 2013 compiler handles subrange predicates of
 floating-point types incorrectly. Thus, there is no run-time check for
-`Positive_Float` type and others. Thus has been already fixed by
-AdaCore and such predicates will be added once a new compiler is
+`Positive_Float` type and others. This has been already fixed by
+AdaCore and those predicates will be added once a new compiler is
 released.
